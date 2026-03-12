@@ -341,7 +341,7 @@ chi_mtpe %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Hay asociación significativa entre tamaño de empresa y tipo de contrato (χ²=`r round(chi_mtpe$estadistico,1)`, p=`r signif(chi_mtpe$p_value,3)`) con tamaño de efecto `V`=`r round(chi_mtpe$cramer_v,3)`, de magnitud práctica moderada-baja.
+**Comentario de análisis.** Plan técnico: contrastamos H0 (independencia entre tamaño de empresa y tipo de contrato) con α=0.05. Resultado: χ²=`r round(chi_mtpe$estadistico,3)`, gl=`r chi_mtpe$gl`, p=`r signif(chi_mtpe$p_value,4)`, V de Cramér=`r round(chi_mtpe$cramer_v,3)` (`r dplyr::case_when(chi_mtpe$cramer_v < 0.1 ~ "despreciable", chi_mtpe$cramer_v < 0.3 ~ "bajo", chi_mtpe$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_mtpe$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: el tipo de contrato sí varía con el tamaño empresarial, aunque con magnitud práctica contenida.
 
 ```{r}
 kw_mtpe <- mtpe %>%
@@ -356,7 +356,7 @@ kw_mtpe %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** `r kw_mtpe$prueba` resulta significativa (p=`r signif(kw_mtpe$p_value,3)`), por lo que hay diferencias salariales reales entre niveles educativos.
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de remuneración entre niveles educativos), α=0.05. Resultado `r kw_mtpe$prueba`: estadístico=`r round(kw_mtpe$estadistico,3)`, p=`r signif(kw_mtpe$p_value,4)`, n=`r kw_mtpe$n`. Decisión: **`r ifelse(kw_mtpe$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: existen diferencias salariales por nivel educativo, coherentes con estratificación del ingreso en el mercado formal.
 
 ```{r}
 p_mtpe_box <- mtpe %>%
@@ -476,7 +476,7 @@ chi_mig %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Existe diferencia estadística por sexo en la composición migratoria (p=`r signif(chi_mig$p_value,3)`), pero con tamaño de efecto `V`=`r round(chi_mig$cramer_v,3)`, por lo que la brecha es presente pero no extrema.
+**Comentario de análisis.** Plan técnico: H0 (sexo y estado migratorio son independientes), α=0.05. Resultado: χ²=`r round(chi_mig$estadistico,3)`, gl=`r chi_mig$gl`, p=`r signif(chi_mig$p_value,4)`, V=`r round(chi_mig$cramer_v,3)` (`r dplyr::case_when(chi_mig$cramer_v < 0.1 ~ "despreciable", chi_mig$cramer_v < 0.3 ~ "bajo", chi_mig$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_mig$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la composición migratoria por sexo presenta diferencias, pero de tamaño no grande.
 
 ```{r}
 kw_mig <- mig %>%
@@ -491,7 +491,7 @@ kw_mig %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Aquí evaluamos si la edad cambia entre estados migratorios. Si el resultado es significativo, sugiere perfiles etarios diferenciados de regularización.
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de edad entre estados migratorios), α=0.05. Resultado `r kw_mig$prueba`: estadístico=`r round(kw_mig$estadistico,3)`, p=`r signif(kw_mig$p_value,4)`, n=`r kw_mig$n`, grupos=`r kw_mig$grupos`. Decisión: **`r ifelse(kw_mig$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: hay evidencia de perfiles etarios distintos entre estados migratorios.
 
 ## Multivariado explicativo {#migraciones-multivariado}
 
@@ -595,7 +595,7 @@ chi_salud %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Evalúa si el perfil de servicios difiere por sexo. De nuevo, `cramer_v` te da el tamaño práctico de la asociación.
+**Comentario de análisis.** Plan técnico: H0 (sexo y tipo de servicio son independientes), α=0.05. Resultado: χ²=`r round(chi_salud$estadistico,3)`, gl=`r chi_salud$gl`, p=`r signif(chi_salud$p_value,4)`, V=`r round(chi_salud$cramer_v,3)` (`r dplyr::case_when(chi_salud$cramer_v < 0.1 ~ "despreciable", chi_salud$cramer_v < 0.3 ~ "bajo", chi_salud$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_salud$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: existe diferencia por sexo en el patrón de uso de servicios, con magnitud práctica a evaluar mediante V.
 
 ```{r}
 kw_salud <- salud_at %>%
@@ -609,7 +609,7 @@ kw_salud %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Contrasta si la edad cambia entre atenciones de emergencia y no emergencia. Si hay diferencia, sugiere segmentación etaria del uso de urgencias.
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de edad entre emergencia y no emergencia), α=0.05. Resultado `r kw_salud$prueba`: estadístico=`r round(kw_salud$estadistico,3)`, p=`r signif(kw_salud$p_value,4)`, n=`r kw_salud$n`. Decisión: **`r ifelse(kw_salud$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la estructura etaria del uso de emergencia difiere de la no emergencia.
 
 ## Multivariado explicativo {#salud-atenciones-multivariado}
 
@@ -680,7 +680,7 @@ chi_saf %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Contrasta si la composición de grupos etarios difiere por sexo en afiliación; relevante para enfoque de ciclo de vida y género.
+**Comentario de análisis.** Plan técnico: H0 (sexo y grupo etario son independientes), α=0.05. Resultado: χ²=`r round(chi_saf$estadistico,3)`, gl=`r chi_saf$gl`, p=`r signif(chi_saf$p_value,4)`, V=`r round(chi_saf$cramer_v,3)` (`r dplyr::case_when(chi_saf$cramer_v < 0.1 ~ "despreciable", chi_saf$cramer_v < 0.3 ~ "bajo", chi_saf$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_saf$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: hay diferencias por sexo en composición etaria de afiliación.
 
 ```{r}
 wil_saf <- prueba_num_vs_cat(salud_af, edad, sexo)
@@ -691,7 +691,7 @@ wil_saf %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Esta prueba verifica si la distribución de edad difiere entre sexos en afiliados (no solo media, sino rangos).
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de edad por sexo), α=0.05. Resultado `r wil_saf$prueba`: estadístico=`r round(wil_saf$estadistico,3)`, p=`r signif(wil_saf$p_value,4)`, n=`r wil_saf$n`. Decisión: **`r ifelse(wil_saf$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la edad difiere por sexo en afiliación, lo que sugiere perfiles demográficos distintos.
 
 ## Multivariado explicativo {#salud-afiliados-multivariado}
 
@@ -768,7 +768,7 @@ chi_eb %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Esta prueba evalúa si la composición por sexo varía entre niveles educativos; combina evidencia de significancia y tamaño de efecto.
+**Comentario de análisis.** Plan técnico: H0 (sexo y nivel educativo son independientes), α=0.05. Resultado: χ²=`r round(chi_eb$estadistico,3)`, gl=`r chi_eb$gl`, p=`r signif(chi_eb$p_value,4)`, V=`r round(chi_eb$cramer_v,3)` (`r dplyr::case_when(chi_eb$cramer_v < 0.1 ~ "despreciable", chi_eb$cramer_v < 0.3 ~ "bajo", chi_eb$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_eb$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la distribución por sexo cambia entre niveles, con magnitud resumida por V.
 
 ```{r}
 kw_eb <- prueba_num_vs_cat(educ_bas, edad_estudiante, nivel)
@@ -779,7 +779,7 @@ kw_eb %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Contrasta diferencias de edad entre niveles. Es esperable que sea significativo por estructura escolar, pero la magnitud observada también es informativa.
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de edad entre niveles), α=0.05. Resultado `r kw_eb$prueba`: estadístico=`r round(kw_eb$estadistico,3)`, p=`r signif(kw_eb$p_value,4)`, n=`r kw_eb$n`, grupos=`r kw_eb$grupos`. Decisión: **`r ifelse(kw_eb$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: las diferencias etarias por nivel son claras y esperables por progresión escolar.
 
 ## Multivariado explicativo {#educ-basica-multivariado}
 
@@ -848,7 +848,7 @@ chi_es %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Evalúa si el tipo de estudiante difiere por sexo. Por tamaño muestral reducido, conviene enfatizar tendencia y no solo p-valor.
+**Comentario de análisis.** Plan técnico: H0 (sexo y tipo de estudiante son independientes), α=0.05. Resultado: χ²=`r round(chi_es$estadistico,3)`, gl=`r chi_es$gl`, p=`r signif(chi_es$p_value,4)`, V=`r round(chi_es$cramer_v,3)`, n=`r chi_es$n`. Decisión: **`r ifelse(chi_es$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: con p=`r signif(chi_es$p_value,4)`, no hay evidencia suficiente para afirmar diferencia por sexo en tipo de estudiante en esta muestra.
 
 ```{r}
 wil_es <- prueba_num_vs_cat(educ_sup, edad, sexo)
@@ -859,7 +859,7 @@ wil_es %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Permite identificar brechas etarias por sexo en educación superior; interpretar como señal preliminar.
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de edad por sexo), α=0.05. Resultado `r wil_es$prueba`: estadístico=`r round(wil_es$estadistico,3)`, p=`r signif(wil_es$p_value,4)`, n=`r wil_es$n`. Decisión: **`r ifelse(wil_es$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: este contraste sugiere `r ifelse(wil_es$p_value < 0.05, "diferencia etaria por sexo", "ausencia de evidencia robusta de diferencia etaria por sexo")` en educación superior.
 
 ## Multivariado explicativo {#educ-superior-multivariado}
 
@@ -944,7 +944,7 @@ chi_ei %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Explora si la gestión institucional se distribuye distinto por sexo; resultado útil como pista, no como conclusión definitiva.
+**Comentario de análisis.** Plan técnico: H0 (sexo y gestión institucional son independientes), α=0.05. Resultado: χ²=`r round(chi_ei$estadistico,3)`, gl=`r chi_ei$gl`, p=`r signif(chi_ei$p_value,4)`, V=`r round(chi_ei$cramer_v,3)`, n=`r chi_ei$n`. Decisión: **`r ifelse(chi_ei$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: por n pequeño, este resultado se usa como evidencia exploratoria de posibles diferencias por sexo en tipo de gestión.
 
 ```{r}
 wil_ei <- prueba_num_vs_cat(educ_ins, edad_aprox_2024, sexo)
@@ -955,7 +955,7 @@ wil_ei %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Esta comparación etaria por sexo en institutos debe leerse con especial cautela por tamaño muestral.
+**Comentario de análisis.** Plan técnico: H0 (misma distribución de edad aproximada por sexo), α=0.05. Resultado `r wil_ei$prueba`: estadístico=`r round(wil_ei$estadistico,3)`, p=`r signif(wil_ei$p_value,4)`, n=`r wil_ei$n`. Decisión: **`r ifelse(wil_ei$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: se observa `r ifelse(wil_ei$p_value < 0.05, "diferencia etaria por sexo", "ausencia de evidencia concluyente de diferencia")`, con inferencia limitada por el tamaño muestral.
 
 ## Multivariado exploratorio {#educ-institutos-multivariado}
 
