@@ -25,7 +25,7 @@ En la parte final se incorpora un módulo de georreferenciación enfocado en **d
 
 # Enfoque del informe {#enfoque}
 
-Este documento trabaja **dataset por dataset** con tres niveles:
+Este documento trabaja **base de datos por base de datos** con tres niveles:
 
 1. **Descriptivo univariado** (tablas con `gt`, gráficos con `ggplot2` y versiones interactivas con `plotly`).
 2. **Análisis bivariado** con pruebas de significancia.
@@ -255,12 +255,23 @@ norm_geo <- function(x) {
 
 ```{r}
 resumen_fuentes %>%
+  mutate(base_datos = recode(dataset,
+    mtpe = "Trabajo",
+    migraciones = "Migraciones",
+    salud_atenciones = "Salud atenciones",
+    salud_afiliados = "Salud afiliados",
+    educ_basica = "Educación básica",
+    educ_superior = "Educación superior",
+    educ_institutos = "Educación institutos"
+  )) %>%
+  select(base_datos, filas, columnas) %>%
   gt() %>%
   tab_header(title = "Tamaño de cada base analizada") %>%
+  cols_label(base_datos = "Base de datos", filas = "Filas", columnas = "Columnas") %>%
   fmt_number(columns = c(filas, columnas), decimals = 0, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** La escala es claramente desigual: **MTPE** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="mtpe"])`) y **salud_atenciones** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="salud_atenciones"])`) concentran la mayor carga, mientras **educ_superior** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_superior"])`) y **educ_institutos** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_institutos"])`) deben leerse como evidencia exploratoria.
+**Comentario de análisis.** La escala es claramente desigual: **Trabajo** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="mtpe"])`) y **salud_atenciones** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="salud_atenciones"])`) concentran la mayor carga, mientras **educ_superior** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_superior"])`) y **educ_institutos** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_institutos"])`) deben leerse como evidencia exploratoria.
 
 ## Inventario de variables disponibles {#inventario-variables}
 
@@ -287,8 +298,19 @@ resumen_vars <- catalogo_vars %>%
   count(dataset, name = "n_variables")
 
 resumen_vars %>%
+  mutate(base_datos = recode(dataset,
+    mtpe = "Trabajo",
+    migraciones = "Migraciones",
+    salud_atenciones = "Salud atenciones",
+    salud_afiliados = "Salud afiliados",
+    educ_basica = "Educación básica",
+    educ_superior = "Educación superior",
+    educ_institutos = "Educación institutos"
+  )) %>%
+  select(base_datos, n_variables) %>%
   gt() %>%
   tab_header(title = "Cantidad de variables por base") %>%
+  cols_label(base_datos = "Base de datos", n_variables = "N. variables") %>%
   fmt_number(columns = n_variables, decimals = 0, use_seps = TRUE)
 ```
 
@@ -312,8 +334,18 @@ catalogo_detalle <- catalogo_vars %>%
   mutate(descripcion_variable = replace_na(descripcion_variable, "Sin descripción en diccionario"))
 
 catalogo_detalle %>%
-  arrange(dataset, variable) %>%
-  gt(groupname_col = "dataset") %>%
+  mutate(base_datos = recode(dataset,
+    mtpe = "Trabajo",
+    migraciones = "Migraciones",
+    salud_atenciones = "Salud atenciones",
+    salud_afiliados = "Salud afiliados",
+    educ_basica = "Educación básica",
+    educ_superior = "Educación superior",
+    educ_institutos = "Educación institutos"
+  )) %>%
+  select(base_datos, variable, tipo_dato, descripcion_variable) %>%
+  arrange(base_datos, variable) %>%
+  gt(groupname_col = "base_datos") %>%
   tab_header(title = "Catálogo de variables por base (etiqueta y tipo)") %>%
   cols_label(
     variable = "Variable",
@@ -325,7 +357,7 @@ catalogo_detalle %>%
 
 **Comentario de análisis.** Este inventario muestra qué tan comparable es cada base: variables comunes como `sexo`, `edad`, `provincia` y `distrito` permiten integración analítica; variables específicas (por ejemplo `remuneracion_soles`, `estado_migratorio`, `cod_diagnostico`) aportan profundidad sectorial.
 
-# MTPE - Empleo formal {#mtpe}
+# Trabajo - Empleo formal {#mtpe}
 
 ## Univariado {#mtpe-univariado}
 
@@ -339,12 +371,12 @@ mtpe %>%
     remuneracion_mediana = median(remuneracion_soles, na.rm = TRUE)
   ) %>%
   gt() %>%
-  tab_header(title = "Resumen numérico MTPE") %>%
+  tab_header(title = "Resumen numérico Trabajo") %>%
   fmt_number(columns = c(n, anio_min, anio_max), decimals = 0, use_seps = TRUE) %>%
   fmt_number(columns = c(remuneracion_media, remuneracion_mediana), decimals = 2, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** MTPE cubre `r min(mtpe$anio, na.rm=TRUE)`-`r max(mtpe$anio, na.rm=TRUE)` con `r scales::comma(nrow(mtpe))` observaciones. La media salarial (`r round(mean(mtpe$remuneracion_soles, na.rm=TRUE),2)`) supera la mediana (`r round(median(mtpe$remuneracion_soles, na.rm=TRUE),2)`), confirmando distribución sesgada hacia salarios altos.
+**Comentario de análisis.** Trabajo cubre `r min(mtpe$anio, na.rm=TRUE)`-`r max(mtpe$anio, na.rm=TRUE)` con `r scales::comma(nrow(mtpe))` observaciones. La media salarial (`r round(mean(mtpe$remuneracion_soles, na.rm=TRUE),2)`) supera la mediana (`r round(median(mtpe$remuneracion_soles, na.rm=TRUE),2)`), confirmando distribución sesgada hacia salarios altos.
 
 ```{r}
 tabla_frecuencia_gt(mtpe, actividad_economica, n_top = 12, title = "Top 12 actividades económicas")
@@ -360,7 +392,7 @@ p_mtpe_trend <- mtpe %>%
   geom_point(size = 2) +
   scale_y_continuous(labels = scales::comma) +
   labs(
-    title = "Evolución anual de registros MTPE",
+    title = "Evolución anual de registros Trabajo",
     x = "Año",
     y = "Número de registros"
   )
@@ -452,7 +484,7 @@ mtpe_mod <- mtpe %>%
 
 mod_mtpe <- lm(log_remu ~ anio + categoria_ocupacional + nivel_educativo + tamano_empresa, data = mtpe_mod)
 
-tabla_modelo_gt(mod_mtpe, exponentiate = FALSE, title = "Modelo lineal MTPE: log(remuneración)")
+tabla_modelo_gt(mod_mtpe, exponentiate = FALSE, title = "Modelo lineal Trabajo: log(remuneración)")
 ```
 
 **Comentario de análisis.** Este modelo estima asociaciones ajustadas con la remuneración (en log). Los coeficientes positivos indican primas salariales relativas respecto a la categoría de referencia.
@@ -462,7 +494,7 @@ glance_mtpe <- broom::glance(mod_mtpe)
 glance_mtpe %>%
   select(r.squared, adj.r.squared, sigma, statistic, p.value, nobs) %>%
   gt() %>%
-  tab_header(title = "Métricas del modelo lineal MTPE") %>%
+  tab_header(title = "Métricas del modelo lineal Trabajo") %>%
   fmt_number(columns = everything(), decimals = 4)
 ```
 
@@ -1010,7 +1042,7 @@ educ_ins %>%
 tabla_frecuencia_gt(educ_ins, carrera, n_top = 10, title = "Carreras observadas")
 ```
 
-**Comentario de análisis.** La tabla ayuda a identificar preferencias formativas y posibles nichos ocupacionales vinculables con la evidencia de MTPE.
+**Comentario de análisis.** La tabla ayuda a identificar preferencias formativas y posibles nichos ocupacionales vinculables con la evidencia de Trabajo.
 
 ```{r}
 p_ei_periodo <- educ_ins %>%
@@ -1077,7 +1109,7 @@ if (nrow(ei_mod) >= 15) {
 ```{r}
 resumen_modelos <- tribble(
   ~dataset, ~dependiente, ~tipo_modelo, ~predictores_clave, ~nota,
-  "MTPE", "log(remuneracion_soles)", "LM", "año, categoría ocupacional, nivel educativo, tamaño empresa", "Asociaciones salariales estructurales",
+  "Trabajo", "log(remuneracion_soles)", "LM", "año, categoría ocupacional, nivel educativo, tamaño empresa", "Asociaciones salariales estructurales",
   "MIGRACIONES", "irregular_bin", "Logit", "edad, sexo, nivel educativo, transporte, año", "Enfocado a Regulares vs Irregulares",
   "SALUD atenciones", "emergencia_bin", "Logit", "edad, sexo, provincia, año atención", "Uso de servicios de emergencia",
   "SALUD afiliados", "adulto_mayor_bin", "Logit", "sexo, provincia, año afiliación", "Perfil etario de afiliación",
@@ -1088,7 +1120,8 @@ resumen_modelos <- tribble(
 
 resumen_modelos %>%
   gt() %>%
-  tab_header(title = "Resumen de estrategia multivariada por dataset")
+  tab_header(title = "Resumen de estrategia multivariada por base de datos") %>%
+  cols_label(dataset = "Base de datos")
 ```
 
 **Comentario de análisis.** Esta síntesis final conecta cada base con una dependiente analítica concreta, facilitando trazabilidad metodológica para el capítulo de resultados.
@@ -1165,7 +1198,7 @@ p_map_dep <- ggplot(dep_maps_sf) +
   facet_wrap(~dataset, ncol = 3) +
   scale_fill_viridis_c(option = "C", labels = scales::comma) +
   labs(
-    title = "Contexto departamental (Perú): registros por dataset",
+    title = "Contexto departamental (Perú): registros por base de datos",
     subtitle = "Marco general antes del zoom a la provincia del Cusco",
     fill = "Registros"
   ) +
@@ -1205,7 +1238,7 @@ p_map_prov_context <- ggplot(prov_maps_context) +
   facet_wrap(~dataset, ncol = 3) +
   scale_fill_viridis_c(option = "D", labels = scales::comma) +
   labs(
-    title = "Contexto provincial (Departamento Cusco): registros por dataset",
+    title = "Contexto provincial (Departamento Cusco): registros por base de datos",
     subtitle = "Acumulativo para comparar patrones antes del enfoque distrital",
     fill = "Registros"
   ) +
@@ -1268,6 +1301,7 @@ diag_geo <- purrr::imap_dfr(dist_counts, function(cnt, nm) {
 diag_geo %>%
   gt() %>%
   tab_header(title = "Diagnóstico de georreferenciación distrital (Provincia del Cusco)") %>%
+  cols_label(dataset = "Base de datos") %>%
   fmt_number(columns = c(distritos_shp_provincia_cusco, distritos_con_datos, distritos_sin_datos, registros_totales_dataset, registros_mapeados), decimals = 0, use_seps = TRUE) %>%
   fmt_number(columns = pct_registros_mapeados, decimals = 2)
 ```
@@ -1327,7 +1361,8 @@ top_dist_multi <- dist_maps_sf %>%
 
 top_dist_multi %>%
   gt() %>%
-  tab_header(title = "Top 10 distritos (Provincia del Cusco) por dataset") %>%
+  tab_header(title = "Top 10 distritos (Provincia del Cusco) por base de datos") %>%
+  cols_label(dataset = "Base de datos") %>%
   fmt_number(columns = n, decimals = 0, use_seps = TRUE)
 ```
 

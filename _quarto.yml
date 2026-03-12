@@ -11,7 +11,7 @@ website:
     right:
       - text: "Introducción"
         href: "index.html#introduccion"
-      - text: "MTPE"
+      - text: "Trabajo"
         menu:
           - text: "Univariado"
             href: "index.html#mtpe-univariado"
