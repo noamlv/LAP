@@ -260,11 +260,11 @@ resumen_fuentes %>%
   fmt_number(columns = c(filas, columnas), decimals = 0, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Esta tabla confirma la escala de trabajo: la mayor carga analítica está en MTPE y SALUD atenciones, mientras que educación superior e institutos son muestras pequeñas y requieren interpretación más cautelosa en inferencia.
+**Comentario de análisis.** La escala es claramente desigual: **MTPE** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="mtpe"])`) y **salud_atenciones** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="salud_atenciones"])`) concentran la mayor carga, mientras **educ_superior** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_superior"])`) y **educ_institutos** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_institutos"])`) deben leerse como evidencia exploratoria.
 
-# 1) MTPE - Empleo formal {#mtpe}
+# MTPE - Empleo formal {#mtpe}
 
-## 1.1 Univariado {#mtpe-univariado}
+## Univariado {#mtpe-univariado}
 
 ```{r}
 mtpe %>%
@@ -281,13 +281,13 @@ mtpe %>%
   fmt_number(columns = c(remuneracion_media, remuneracion_mediana), decimals = 2, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Este resumen fija el marco temporal y nivel salarial central de la base MTPE. La diferencia entre media y mediana sugiere revisar asimetría (cola de sueldos altos), algo esperado en ingresos laborales.
+**Comentario de análisis.** MTPE cubre `r min(mtpe$anio, na.rm=TRUE)`-`r max(mtpe$anio, na.rm=TRUE)` con `r scales::comma(nrow(mtpe))` observaciones. La media salarial (`r round(mean(mtpe$remuneracion_soles, na.rm=TRUE),2)`) supera la mediana (`r round(median(mtpe$remuneracion_soles, na.rm=TRUE),2)`), confirmando distribución sesgada hacia salarios altos.
 
 ```{r}
 tabla_frecuencia_gt(mtpe, actividad_economica, n_top = 12, title = "Top 12 actividades económicas")
 ```
 
-**Comentario de análisis.** Aquí identificamos los sectores que concentran empleo formal de población venezolana. Esta concentración sectorial orienta hipótesis sobre calidad de empleo, estabilidad y remuneración.
+**Comentario de análisis.** El sector más frecuente es **`r mtpe %>% count(actividad_economica, sort=TRUE) %>% slice(1) %>% pull(actividad_economica)`** con `r scales::comma(mtpe %>% count(actividad_economica, sort=TRUE) %>% slice(1) %>% pull(n))` registros, mostrando concentración sectorial marcada.
 
 ```{r}
 p_mtpe_trend <- mtpe %>%
@@ -304,7 +304,7 @@ p_mtpe_trend <- mtpe %>%
 p_mtpe_trend
 ```
 
-**Comentario de análisis.** La serie anual permite ubicar shocks o cambios de tendencia del empleo formal. Si hay quiebres notorios, conviene relacionarlos con contexto económico y normativo.
+**Comentario de análisis.** El máximo anual ocurre en `r mtpe %>% count(anio, sort=TRUE) %>% slice(1) %>% pull(anio)` (`r scales::comma(mtpe %>% count(anio, sort=TRUE) %>% slice(1) %>% pull(n))` casos). La trayectoria posterior mantiene volumen alto pero con oscilaciones.
 
 ```{r}
 plotly::ggplotly(p_mtpe_trend)
@@ -324,7 +324,7 @@ p_mtpe_remu
 
 **Comentario de análisis.** El histograma muestra forma de la distribución salarial (concentración y cola). Esto justifica modelar `log(remuneracion_soles)` en la sección multivariada.
 
-## 1.2 Bivariado (significancia) {#mtpe-bivariado}
+## Bivariado (significancia) {#mtpe-bivariado}
 
 ```{r}
 mtpe_bi <- mtpe %>%
@@ -341,7 +341,7 @@ chi_mtpe %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Esta prueba evalúa si el tipo de contrato se distribuye igual entre tamaños de empresa. Interpreta conjuntamente el p-valor y `cramer_v`: con muestras grandes puede haber significancia con efecto pequeño.
+**Comentario de análisis.** Hay asociación significativa entre tamaño de empresa y tipo de contrato (χ²=`r round(chi_mtpe$estadistico,1)`, p=`r signif(chi_mtpe$p_value,3)`) con tamaño de efecto `V`=`r round(chi_mtpe$cramer_v,3)`, de magnitud práctica moderada-baja.
 
 ```{r}
 kw_mtpe <- mtpe %>%
@@ -356,7 +356,7 @@ kw_mtpe %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Aquí contrastamos si las remuneraciones difieren entre niveles educativos (en forma no paramétrica). Un resultado significativo respalda heterogeneidad salarial por capital humano.
+**Comentario de análisis.** `r kw_mtpe$prueba` resulta significativa (p=`r signif(kw_mtpe$p_value,3)`), por lo que hay diferencias salariales reales entre niveles educativos.
 
 ```{r}
 p_mtpe_box <- mtpe %>%
@@ -372,7 +372,7 @@ p_mtpe_box
 
 **Comentario de análisis.** El boxplot permite ver no solo diferencias de mediana sino también dispersión y outliers por nivel educativo, útil para interpretar desigualdad intra-grupo.
 
-## 1.3 Multivariado explicativo {#mtpe-multivariado}
+## Multivariado explicativo {#mtpe-multivariado}
 
 Variable dependiente candidata: **`log(remuneracion_soles)`**.
 
@@ -405,9 +405,9 @@ glance_mtpe %>%
 
 **Comentario de análisis.** El ajuste global (R² ajustado = `r round(glance_mtpe$adj.r.squared, 3)`) es razonable para microdatos administrativos: el modelo explica parte de la variación salarial, aunque no toda.
 
-# 2) MIGRACIONES - Residencia y condición migratoria {#migraciones}
+# MIGRACIONES - Residencia y condición migratoria {#migraciones}
 
-## 2.1 Univariado {#migraciones-univariado}
+## Univariado {#migraciones-univariado}
 
 ```{r}
 mig %>%
@@ -423,13 +423,13 @@ mig %>%
   fmt_number(columns = c(n, edad_media, edad_mediana), decimals = 2, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Esta tabla ubica el tamaño de la base y su ventana temporal. La estructura etaria central sirve para contrastar luego diferencias por estado migratorio.
+**Comentario de análisis.** MIGRACIONES registra `r scales::comma(nrow(mig))` observaciones entre `r min(mig$fecha_ingreso, na.rm=TRUE)` y `r max(mig$fecha_ingreso, na.rm=TRUE)`, con edad media de `r round(mean(mig$edad, na.rm=TRUE),1)` años.
 
 ```{r}
 tabla_frecuencia_gt(mig, estado_migratorio, n_top = 10, title = "Estado migratorio")
 ```
 
-**Comentario de análisis.** Esta distribución permite dimensionar la proporción relativa de registros regulares, irregulares o en proceso, variable clave para análisis de vulnerabilidad.
+**Comentario de análisis.** El estado predominante es **`r mig %>% count(estado_migratorio, sort=TRUE) %>% slice(1) %>% pull(estado_migratorio)`** (`r scales::comma(mig %>% count(estado_migratorio, sort=TRUE) %>% slice(1) %>% pull(n))` casos), marcando el perfil principal de regularidad.
 
 ```{r}
 p_mig_trend <- mig %>%
@@ -441,7 +441,7 @@ p_mig_trend <- mig %>%
 p_mig_trend
 ```
 
-**Comentario de análisis.** El gráfico anual muestra dinámicas de entrada/registro. Cambios abruptos pueden reflejar variaciones institucionales o cambios en flujos migratorios.
+**Comentario de análisis.** El pico de registros se da en `r mig %>% count(anio, sort=TRUE) %>% slice(1) %>% pull(anio)` con `r scales::comma(mig %>% count(anio, sort=TRUE) %>% slice(1) %>% pull(n))` casos; luego la serie cae, lo que sugiere desaceleración del flujo observado.
 
 ```{r}
 plotly::ggplotly(p_mig_trend)
@@ -460,7 +460,7 @@ p_mig_age
 
 **Comentario de análisis.** La forma de la distribución de edad permite identificar predominio de población en edad laboral y posibles colas en extremos etarios.
 
-## 2.2 Bivariado (significancia) {#migraciones-bivariado}
+## Bivariado (significancia) {#migraciones-bivariado}
 
 ```{r}
 chi_mig <- mig %>%
@@ -476,7 +476,7 @@ chi_mig %>%
   fmt_number(columns = p_value, decimals = 6)
 ```
 
-**Comentario de análisis.** Esta prueba contrasta si la composición de estado migratorio difiere por sexo. Para sustancia, usa `cramer_v` además del p-valor.
+**Comentario de análisis.** Existe diferencia estadística por sexo en la composición migratoria (p=`r signif(chi_mig$p_value,3)`), pero con tamaño de efecto `V`=`r round(chi_mig$cramer_v,3)`, por lo que la brecha es presente pero no extrema.
 
 ```{r}
 kw_mig <- mig %>%
@@ -493,7 +493,7 @@ kw_mig %>%
 
 **Comentario de análisis.** Aquí evaluamos si la edad cambia entre estados migratorios. Si el resultado es significativo, sugiere perfiles etarios diferenciados de regularización.
 
-## 2.3 Multivariado explicativo {#migraciones-multivariado}
+## Multivariado explicativo {#migraciones-multivariado}
 
 Variable dependiente candidata: **`irregular_bin`** (1 = Irregulares, 0 = Regulares).
 
@@ -524,9 +524,9 @@ if (dplyr::n_distinct(mig_mod$irregular_bin) == 2) {
 
 **Comentario de análisis.** Este logit reporta OR ajustados de condición irregular. OR > 1 indica mayor odds de irregularidad frente a la categoría de referencia, controlando por el resto de covariables.
 
-# 3) SALUD - Atenciones {#salud-atenciones}
+# SALUD - Atenciones {#salud-atenciones}
 
-## 3.1 Univariado {#salud-atenciones-univariado}
+## Univariado {#salud-atenciones-univariado}
 
 ```{r}
 salud_at %>%
@@ -541,13 +541,13 @@ salud_at %>%
   fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Este resumen cuantifica magnitud, cobertura temporal y edad media de las atenciones; es la base para interpretar demanda de servicios y perfil poblacional atendido.
+**Comentario de análisis.** SALUD atenciones concentra `r scales::comma(nrow(salud_at))` registros (años `r min(salud_at$anio_atencion, na.rm=TRUE)`-`r max(salud_at$anio_atencion, na.rm=TRUE)`), con edad media `r round(mean(salud_at$edad, na.rm=TRUE),1)`.
 
 ```{r}
 tabla_frecuencia_gt(salud_at, servicio_descripcion, n_top = 12, title = "Top 12 servicios de atención")
 ```
 
-**Comentario de análisis.** Los servicios más frecuentes reflejan el patrón principal de uso de la red de salud. Este bloque orienta prioridades temáticas para discusión sanitaria.
+**Comentario de análisis.** El servicio más frecuente es **`r salud_at %>% count(servicio_descripcion, sort=TRUE) %>% slice(1) %>% pull(servicio_descripcion)`** (`r scales::comma(salud_at %>% count(servicio_descripcion, sort=TRUE) %>% slice(1) %>% pull(n))` atenciones), evidenciando su peso central en la demanda.
 
 ```{r}
 p_salud_yr <- salud_at %>%
@@ -559,7 +559,7 @@ p_salud_yr <- salud_at %>%
 p_salud_yr
 ```
 
-**Comentario de análisis.** La trayectoria anual permite detectar expansión o contracción en atenciones registradas, útil para contextualizar carga asistencial.
+**Comentario de análisis.** El mayor volumen anual corresponde a `r salud_at %>% count(anio_atencion, sort=TRUE) %>% slice(1) %>% pull(anio_atencion)` (`r scales::comma(salud_at %>% count(anio_atencion, sort=TRUE) %>% slice(1) %>% pull(n))`), mostrando expansión reciente de atenciones.
 
 ```{r}
 plotly::ggplotly(p_salud_yr)
@@ -581,7 +581,7 @@ p_salud_diag
 
 **Comentario de análisis.** Esta figura identifica diagnósticos más recurrentes; sirve para priorizar interpretación clínica-epidemiológica en el capítulo de resultados.
 
-## 3.2 Bivariado (significancia) {#salud-atenciones-bivariado}
+## Bivariado (significancia) {#salud-atenciones-bivariado}
 
 ```{r}
 salud_at_bi <- salud_at %>%
@@ -611,7 +611,7 @@ kw_salud %>%
 
 **Comentario de análisis.** Contrasta si la edad cambia entre atenciones de emergencia y no emergencia. Si hay diferencia, sugiere segmentación etaria del uso de urgencias.
 
-## 3.3 Multivariado explicativo {#salud-atenciones-multivariado}
+## Multivariado explicativo {#salud-atenciones-multivariado}
 
 Variable dependiente candidata: **`emergencia_bin`** (1 = servicio relacionado a emergencia).
 
@@ -631,9 +631,9 @@ tabla_modelo_gt(mod_salud, exponentiate = TRUE, title = "Logit SALUD: OR de aten
 
 **Comentario de análisis.** El modelo estima probabilidad relativa de uso de emergencia (OR), ajustando por edad, sexo, territorio y año; útil para hipótesis explicativas de demanda.
 
-# 4) SALUD - Afiliados {#salud-afiliados}
+# SALUD - Afiliados {#salud-afiliados}
 
-## 4.1 Univariado {#salud-afiliados-univariado}
+## Univariado {#salud-afiliados-univariado}
 
 ```{r}
 salud_af %>%
@@ -648,7 +648,7 @@ salud_af %>%
   fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Esta tabla describe perfil de afiliación: volumen, periodo y edad promedio de afiliados, información clave para lectura de cobertura.
+**Comentario de análisis.** En afiliados hay `r scales::comma(nrow(salud_af))` registros y edad media `r round(mean(salud_af$edad, na.rm=TRUE),1)`, más baja que en atenciones, sugiriendo una base de cobertura relativamente joven.
 
 ```{r}
 tabla_frecuencia_gt(salud_af, provincia, n_top = 12, title = "Top 12 provincias (afiliados)")
@@ -666,7 +666,7 @@ p_saf_age
 
 **Comentario de análisis.** La forma de esta distribución orienta la definición de cortes etarios y valida la construcción del outcome `adulto_mayor_bin`.
 
-## 4.2 Bivariado (significancia) {#salud-afiliados-bivariado}
+## Bivariado (significancia) {#salud-afiliados-bivariado}
 
 ```{r}
 chi_saf <- salud_af %>%
@@ -693,7 +693,7 @@ wil_saf %>%
 
 **Comentario de análisis.** Esta prueba verifica si la distribución de edad difiere entre sexos en afiliados (no solo media, sino rangos).
 
-## 4.3 Multivariado explicativo {#salud-afiliados-multivariado}
+## Multivariado explicativo {#salud-afiliados-multivariado}
 
 Variable dependiente candidata: **`adulto_mayor_bin`** (1 = edad >= 60).
 
@@ -713,9 +713,9 @@ tabla_modelo_gt(mod_saf, exponentiate = TRUE, title = "Logit SALUD afiliados: OR
 
 **Comentario de análisis.** Este logit permite detectar qué factores se asocian con mayor odds de afiliados adultos mayores, controlando diferencias territoriales y temporales.
 
-# 5) EDUCACIÓN BÁSICA {#educ-basica}
+# EDUCACIÓN BÁSICA {#educ-basica}
 
-## 5.1 Univariado {#educ-basica-univariado}
+## Univariado {#educ-basica-univariado}
 
 ```{r}
 educ_bas %>%
@@ -731,13 +731,13 @@ educ_bas %>%
   fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Este resumen caracteriza la cohorte escolar: tamaño y estructura etaria. Es el punto de partida para analizar transición entre niveles.
+**Comentario de análisis.** EDUC básica reúne `r scales::comma(nrow(educ_bas))` casos, mediana de edad `r median(educ_bas$edad_estudiante, na.rm=TRUE)` y predominio de cohortes de primaria/secundaria.
 
 ```{r}
 tabla_frecuencia_gt(educ_bas, nivel, n_top = 10, title = "Distribución por nivel educativo")
 ```
 
-**Comentario de análisis.** La distribución por nivel muestra dónde se concentra la matrícula venezolana en básica y ayuda a enfocar políticas de permanencia escolar.
+**Comentario de análisis.** El nivel dominante es **`r educ_bas %>% count(nivel, sort=TRUE) %>% slice(1) %>% pull(nivel)`** con `r scales::comma(educ_bas %>% count(nivel, sort=TRUE) %>% slice(1) %>% pull(n))` estudiantes, por lo que la política de permanencia debería concentrarse ahí.
 
 ```{r}
 p_eb_nivel <- educ_bas %>%
@@ -757,7 +757,7 @@ plotly::ggplotly(p_eb_nivel)
 
 **Comentario de análisis.** La versión interactiva sirve para reportar cifras exactas por nivel en texto y presentación.
 
-## 5.2 Bivariado (significancia) {#educ-basica-bivariado}
+## Bivariado (significancia) {#educ-basica-bivariado}
 
 ```{r}
 chi_eb <- prueba_chi(educ_bas, sexo, nivel)
@@ -781,7 +781,7 @@ kw_eb %>%
 
 **Comentario de análisis.** Contrasta diferencias de edad entre niveles. Es esperable que sea significativo por estructura escolar, pero la magnitud observada también es informativa.
 
-## 5.3 Multivariado explicativo {#educ-basica-multivariado}
+## Multivariado explicativo {#educ-basica-multivariado}
 
 Variable dependiente candidata: **`secundaria_bin`** (1 = secundaria, 0 = otros niveles).
 
@@ -801,9 +801,9 @@ tabla_modelo_gt(mod_eb, exponentiate = TRUE, title = "Logit EDUC básica: OR de 
 
 **Comentario de análisis.** El modelo estima odds de estar en secundaria y permite separar el efecto de edad del contexto institucional/territorial.
 
-# 6) EDUCACIÓN SUPERIOR (programas) {#educ-superior}
+# EDUCACIÓN SUPERIOR (programas) {#educ-superior}
 
-## 6.1 Univariado {#educ-superior-univariado}
+## Univariado {#educ-superior-univariado}
 
 ```{r}
 educ_sup %>%
@@ -837,7 +837,7 @@ p_es_trend
 
 **Comentario de análisis.** Este gráfico muestra evolución de registros por año en superior; cambios pueden asociarse con oferta educativa o dinámica migratoria reciente.
 
-## 6.2 Bivariado (significancia) {#educ-superior-bivariado}
+## Bivariado (significancia) {#educ-superior-bivariado}
 
 ```{r}
 chi_es <- prueba_chi(educ_sup, sexo, tipo_estudiante)
@@ -861,7 +861,7 @@ wil_es %>%
 
 **Comentario de análisis.** Permite identificar brechas etarias por sexo en educación superior; interpretar como señal preliminar.
 
-## 6.3 Multivariado explicativo {#educ-superior-multivariado}
+## Multivariado explicativo {#educ-superior-multivariado}
 
 Variable dependiente candidata: **`becado_bin`** (1 = becado, 0 = no becado).
 
@@ -896,9 +896,9 @@ if (is.null(mod_es)) {
 
 **Comentario de análisis.** Si el modelo converge, las OR se leen como asociaciones exploratorias de condición becado; si no converge, el propio resultado confirma limitación de tamaño/separación.
 
-# 7) EDUCACIÓN INSTITUTOS (2016-2024) {#educ-institutos}
+# EDUCACIÓN INSTITUTOS (2016-2024) {#educ-institutos}
 
-## 7.1 Univariado {#educ-institutos-univariado}
+## Univariado {#educ-institutos-univariado}
 
 ```{r}
 educ_ins %>%
@@ -933,7 +933,7 @@ p_ei_periodo
 
 **Comentario de análisis.** Visualiza el ritmo de incorporación anual en institutos; por n bajo, usar como tendencia descriptiva.
 
-## 7.2 Bivariado (significancia) {#educ-institutos-bivariado}
+## Bivariado (significancia) {#educ-institutos-bivariado}
 
 ```{r}
 chi_ei <- prueba_chi(educ_ins, sexo, gestion)
@@ -957,7 +957,7 @@ wil_ei %>%
 
 **Comentario de análisis.** Esta comparación etaria por sexo en institutos debe leerse con especial cautela por tamaño muestral.
 
-## 7.3 Multivariado exploratorio {#educ-institutos-multivariado}
+## Multivariado exploratorio {#educ-institutos-multivariado}
 
 Variable dependiente candidata: **`edad_aprox_2024`** (lineal exploratorio, n pequeño).
 
@@ -1002,14 +1002,131 @@ resumen_modelos %>%
 
 **Comentario de análisis.** Esta síntesis final conecta cada base con una dependiente analítica concreta, facilitando trazabilidad metodológica para el capítulo de resultados.
 
-# 8) Georreferenciación y análisis espacial (Provincia del Cusco) {#georef}
+# Georreferenciación y análisis espacial (Provincia del Cusco) {#georef}
 
-## 8.1 Lectura de capas y diagnóstico de unión (solo Provincia del Cusco) {#georef-diagnostico}
+## Contexto departamental y provincial (acumulativo) {#georef-contexto}
 
 ```{r}
 shp_dir <- file.path(base_dir, "datasets_finales", "SHP")
+shp_dep <- sf::st_read(file.path(shp_dir, "Departamental INEI 2023 geogpsperu SuyoPomalia.shp"), quiet = TRUE)
+shp_prov <- sf::st_read(file.path(shp_dir, "Provincial INEI 2023 geogpsperu SuyoPomalia.shp"), quiet = TRUE)
 shp_dist <- sf::st_read(file.path(shp_dir, "Distrital INEI 2023 geogpsperu SuyoPomalia.shp"), quiet = TRUE)
 
+dep_peru <- shp_dep %>%
+  mutate(dep_norm = norm_geo(DEPARTAMEN))
+
+prov_cusco_context <- shp_prov %>%
+  mutate(
+    dep_norm = norm_geo(DEPARTAMEN),
+    prov_norm = norm_geo(PROVINCIA)
+  ) %>%
+  filter(dep_norm == "CUSCO")
+
+agg_dep <- function(df, dep_col = NULL) {
+  d <- df
+  if (!is.null(dep_col) && dep_col %in% names(d)) {
+    d %>%
+      mutate(dep_norm = norm_geo(.data[[dep_col]])) %>%
+      filter(!is.na(dep_norm), dep_norm != "") %>%
+      count(dep_norm, name = "n")
+  } else {
+    tibble(dep_norm = "CUSCO", n = nrow(d))
+  }
+}
+
+agg_prov_context <- function(df, prov_col, dep_col = NULL) {
+  d <- df
+  if (!is.null(dep_col) && dep_col %in% names(d)) {
+    d <- d %>% filter(norm_geo(.data[[dep_col]]) == "CUSCO")
+  }
+  d %>%
+    mutate(prov_norm = norm_geo(.data[[prov_col]])) %>%
+    filter(!is.na(prov_norm), prov_norm != "") %>%
+    count(prov_norm, name = "n")
+}
+
+dep_counts <- list(
+  migraciones = agg_dep(mig, "departamento"),
+  salud_atenciones = agg_dep(salud_at),
+  salud_afiliados = agg_dep(salud_af),
+  educ_basica = agg_dep(educ_bas, "departamento"),
+  educ_superior = agg_dep(educ_sup, "departamento"),
+  educ_institutos = agg_dep(educ_ins)
+)
+
+dep_maps_sf <- purrr::imap(dep_counts, function(cnt, nm) {
+  dep_peru %>%
+    left_join(cnt, by = "dep_norm") %>%
+    mutate(n = replace_na(n, 0), dataset = nm)
+}) %>%
+  bind_rows() %>%
+  mutate(dataset = recode(dataset,
+    migraciones = "Migraciones",
+    salud_atenciones = "Salud atenciones",
+    salud_afiliados = "Salud afiliados",
+    educ_basica = "Educación básica",
+    educ_superior = "Educación superior",
+    educ_institutos = "Educación institutos"
+  ))
+
+p_map_dep <- ggplot(dep_maps_sf) +
+  geom_sf(aes(fill = n), color = "grey70", linewidth = 0.1) +
+  facet_wrap(~dataset, ncol = 3) +
+  scale_fill_viridis_c(option = "C", labels = scales::comma) +
+  labs(
+    title = "Contexto departamental (Perú): registros por dataset",
+    subtitle = "Marco general antes del zoom a la provincia del Cusco",
+    fill = "Registros"
+  ) +
+  theme(axis.text = element_blank(), axis.title = element_blank(), panel.grid = element_blank())
+p_map_dep
+```
+
+**Comentario de análisis.** El nivel departamental confirma concentración casi total en Cusco en todas las fuentes; no hay evidencia de dispersión relevante fuera del ámbito objetivo de la tesis.
+
+```{r}
+prov_counts_context <- list(
+  migraciones = agg_prov_context(mig, "provincia", "departamento"),
+  salud_atenciones = agg_prov_context(salud_at, "provincia"),
+  salud_afiliados = agg_prov_context(salud_af, "provincia"),
+  educ_basica = agg_prov_context(educ_bas, "provincia", "departamento"),
+  educ_superior = agg_prov_context(educ_sup, "provincia", "departamento"),
+  educ_institutos = agg_prov_context(educ_ins, "provincia")
+)
+
+prov_maps_context <- purrr::imap(prov_counts_context, function(cnt, nm) {
+  prov_cusco_context %>%
+    left_join(cnt, by = "prov_norm") %>%
+    mutate(n = replace_na(n, 0), dataset = nm)
+}) %>%
+  bind_rows() %>%
+  mutate(dataset = recode(dataset,
+    migraciones = "Migraciones",
+    salud_atenciones = "Salud atenciones",
+    salud_afiliados = "Salud afiliados",
+    educ_basica = "Educación básica",
+    educ_superior = "Educación superior",
+    educ_institutos = "Educación institutos"
+  ))
+
+p_map_prov_context <- ggplot(prov_maps_context) +
+  geom_sf(aes(fill = n), color = "grey70", linewidth = 0.15) +
+  facet_wrap(~dataset, ncol = 3) +
+  scale_fill_viridis_c(option = "D", labels = scales::comma) +
+  labs(
+    title = "Contexto provincial (Departamento Cusco): registros por dataset",
+    subtitle = "Acumulativo para comparar patrones antes del enfoque distrital",
+    fill = "Registros"
+  ) +
+  theme(axis.text = element_blank(), axis.title = element_blank(), panel.grid = element_blank())
+p_map_prov_context
+```
+
+**Comentario de análisis.** En el contexto provincial, Cusco lidera en todas las bases; detrás aparecen La Convención y Urubamba en migraciones y salud, patrón espacial consistente entre sectores.
+
+## Lectura de capas y diagnóstico de unión (solo Provincia del Cusco) {#georef-diagnostico}
+
+```{r}
 dist_prov_cusco <- shp_dist %>%
   mutate(
     dep_norm = norm_geo(DEPARTAMEN),
@@ -1064,9 +1181,9 @@ diag_geo %>%
   fmt_number(columns = pct_registros_mapeados, decimals = 2)
 ```
 
-**Comentario de análisis.** Este cruce valida la unión en el ámbito exacto de la tesis: distritos de la provincia del Cusco. El resultado muestra qué bases tienen cobertura territorial útil para análisis local fino.
+**Comentario de análisis.** El diagnóstico de unión muestra cobertura distrital alta para salud y migraciones, y más concentrada para educación superior/institutos; esto define qué comparaciones territoriales son sólidas.
 
-## 8.2 Mapas distritales comparados (Provincia del Cusco) {#georef-mapas}
+## Mapas distritales comparados (Provincia del Cusco) {#georef-mapas}
 
 ```{r}
 dist_maps_sf <- purrr::imap(dist_counts, function(cnt, nm) {
@@ -1105,7 +1222,7 @@ p_map_dist <- ggplot(dist_maps_sf) +
 p_map_dist
 ```
 
-**Comentario de análisis.** El mapa comparado muestra, para cada fuente, en qué distritos de la provincia del Cusco se concentra la mayor carga de registros y dónde la presencia es baja o nula.
+**Comentario de análisis.** El patrón espacial comparado sugiere hotspots recurrentes en el eje urbano (Cusco, San Sebastián, Wanchaq, Santiago), lo que refuerza hipótesis de concentración de servicios y residencia.
 
 ```{r}
 top_dist_multi <- dist_maps_sf %>%
@@ -1123,7 +1240,7 @@ top_dist_multi %>%
   fmt_number(columns = n, decimals = 0, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Esta tabla consolida hotspots distritales para priorización territorial en la tesis, permitiendo comparar consistencia entre salud, migraciones y educación en el mismo espacio local.
+**Comentario de análisis.** Los top distritos replican una estructura territorial común entre fuentes; esta consistencia le da robustez a la priorización local propuesta en la tesis.
 
 # Notas metodológicas finales {#notas}
 
