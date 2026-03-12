@@ -21,7 +21,7 @@ execute:
 Este informe presenta un análisis cuantitativo integral sobre la población venezolana en Cusco a partir de registros administrativos de empleo, migraciones, salud y educación.  
 Se muestran resultados descriptivos, contrastes bivariados con pruebas de significancia y modelos multivariados explicativos, con una lectura orientada a decisiones y redacción de tesis.
 
-En la parte final se incorpora un módulo de georreferenciación enfocado en **distritos de la provincia del Cusco**, usando shapefiles INEI 2023, para identificar patrones territoriales y hotspots locales.
+En la parte final se incorpora un módulo de georreferenciación enfocado en **distritos de la provincia del Cusco**, usando shapefiles INEI 2023, para identificar patrones territoriales y zonas de concentración local.
 
 # Enfoque del informe {#enfoque}
 
@@ -113,8 +113,6 @@ resumen_fuentes <- tibble(
   filas = c(nrow(mtpe), nrow(mig), nrow(salud_at), nrow(salud_af), nrow(educ_bas), nrow(educ_sup), nrow(educ_ins)),
   columnas = c(ncol(mtpe), ncol(mig), ncol(salud_at), ncol(salud_af), ncol(educ_bas), ncol(educ_sup), ncol(educ_ins))
 )
-
-resumen_fuentes
 ```
 
 ```{r}
@@ -123,9 +121,55 @@ fmt_n_pct <- function(n, total) {
   paste0(scales::comma(n), " (", scales::percent(n / total, accuracy = 0.1), ")")
 }
 
-tabla_frecuencia_gt <- function(data, var, n_top = 15, title = NULL) {
+etiqueta_base <- function(x) {
+  recode(x,
+    mtpe = "Trabajo",
+    migraciones = "Migraciones",
+    salud_atenciones = "Salud atenciones",
+    salud_afiliados = "Salud afiliados",
+    educ_basica = "Educación básica",
+    educ_superior = "Educación superior",
+    educ_institutos = "Educación institutos",
+    .default = x
+  )
+}
+
+etiqueta_termino_modelo <- function(term) {
+  term_limpio <- stringr::str_replace_all(term, "`", "")
+  prefijos <- c(
+    edad_estudiante = "Edad del estudiante: ",
+    edad_aprox_2024 = "Edad aproximada 2024: ",
+    anio_atencion = "Año de atención: ",
+    anio_afiliacion = "Año de afiliación: ",
+    anio_ingreso = "Año de ingreso: ",
+    categoria_ocupacional = "Categoría ocupacional: ",
+    nivel_educativo = "Nivel educativo: ",
+    tamano_empresa = "Tamaño de empresa: ",
+    medio_transporte = "Medio de transporte: ",
+    provincia = "Provincia: ",
+    gestion = "Gestión: ",
+    turno = "Turno: ",
+    ciclo = "Ciclo: ",
+    sexo = "Sexo: ",
+    edad = "Edad: ",
+    anio = "Año: "
+  )
+
+  for (p in names(prefijos)) {
+    if (stringr::str_starts(term_limpio, p)) {
+      resto <- stringr::str_remove(term_limpio, paste0("^", p))
+      resto <- stringr::str_replace_all(resto, "_", " ")
+      resto <- stringr::str_squish(resto)
+      if (resto == "") return(stringr::str_remove(prefijos[[p]], ": $"))
+      return(paste0(prefijos[[p]], stringr::str_to_sentence(resto)))
+    }
+  }
+
+  stringr::str_to_sentence(stringr::str_squish(stringr::str_replace_all(term_limpio, "_", " ")))
+}
+
+tabla_frecuencia_gt <- function(data, var, n_top = 15, title = NULL, etiqueta_categoria = "Categoría") {
   v <- rlang::ensym(var)
-  total <- nrow(data)
 
   tab <- data %>%
     mutate(.cat = as.character(!!v), .cat = if_else(is.na(.cat) | .cat == "", "NA", .cat)) %>%
@@ -134,10 +178,10 @@ tabla_frecuencia_gt <- function(data, var, n_top = 15, title = NULL) {
     slice_head(n = n_top)
 
   gt::gt(tab) %>%
-    gt::tab_header(title = title %||% glue::glue("Distribución de {rlang::as_name(v)}")) %>%
+    gt::tab_header(title = title %||% "Distribución de categorías") %>%
     gt::fmt_percent(columns = pct, decimals = 1) %>%
     gt::fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
-    gt::cols_label(.cat = rlang::as_name(v), n = "n", pct = "%")
+    gt::cols_label(.cat = etiqueta_categoria, n = "Frecuencia", pct = "Porcentaje")
 }
 
 cramers_v <- function(tbl) {
@@ -229,16 +273,45 @@ prueba_num_vs_cat <- function(data, y_num, x_cat) {
 tabla_modelo_gt <- function(modelo, exponentiate = FALSE, title = "Resultados del modelo") {
   broom::tidy(modelo, conf.int = TRUE, exponentiate = exponentiate) %>%
     filter(term != "(Intercept)") %>%
+    mutate(variable_explicativa = purrr::map_chr(term, etiqueta_termino_modelo)) %>%
+    select(variable_explicativa, estimate, conf.low, conf.high, p.value) %>%
     mutate(across(where(is.numeric), ~round(.x, 4))) %>%
     gt::gt() %>%
     gt::tab_header(title = title) %>%
     gt::cols_label(
-      term = "Término",
+      variable_explicativa = "Variable explicativa",
       estimate = ifelse(exponentiate, "Estimación (OR)", "Estimación"),
-      conf.low = "IC low",
-      conf.high = "IC high",
+      conf.low = "IC inferior",
+      conf.high = "IC superior",
       p.value = "p-valor"
     )
+}
+
+tabla_prueba_gt <- function(tabla, title) {
+  etiquetas <- list(
+    prueba = "Prueba",
+    estadistico = "Estadístico",
+    gl = "Grados de libertad",
+    p_value = "p-valor",
+    cramer_v = "V de Cramér",
+    n = "Casos analizados",
+    grupos = "Número de grupos"
+  )
+
+  presentes <- intersect(names(etiquetas), names(tabla))
+
+  salida <- tabla %>%
+    gt() %>%
+    tab_header(title = title)
+
+  if (length(presentes) > 0) {
+    salida <- salida %>% cols_label(.list = etiquetas[presentes])
+  }
+
+  salida %>%
+    fmt_number(columns = any_of(c("estadistico", "gl", "cramer_v")), decimals = 3) %>%
+    fmt_number(columns = any_of(c("p_value")), decimals = 6) %>%
+    fmt_number(columns = any_of(c("n", "grupos")), decimals = 0, use_seps = TRUE)
 }
 
 norm_geo <- function(x) {
@@ -255,15 +328,7 @@ norm_geo <- function(x) {
 
 ```{r}
 resumen_fuentes %>%
-  mutate(base_datos = recode(dataset,
-    mtpe = "Trabajo",
-    migraciones = "Migraciones",
-    salud_atenciones = "Salud atenciones",
-    salud_afiliados = "Salud afiliados",
-    educ_basica = "Educación básica",
-    educ_superior = "Educación superior",
-    educ_institutos = "Educación institutos"
-  )) %>%
+  mutate(base_datos = etiqueta_base(dataset)) %>%
   select(base_datos, filas, columnas) %>%
   gt() %>%
   tab_header(title = "Tamaño de cada base analizada") %>%
@@ -289,8 +354,7 @@ datasets_list <- list(
 catalogo_vars <- purrr::imap_dfr(datasets_list, function(df, nm) {
   tibble(
     dataset = nm,
-    variable = names(df),
-    tipo_dato = purrr::map_chr(df, ~class(.x)[1])
+    variable = names(df)
   )
 })
 
@@ -298,23 +362,15 @@ resumen_vars <- catalogo_vars %>%
   count(dataset, name = "n_variables")
 
 resumen_vars %>%
-  mutate(base_datos = recode(dataset,
-    mtpe = "Trabajo",
-    migraciones = "Migraciones",
-    salud_atenciones = "Salud atenciones",
-    salud_afiliados = "Salud afiliados",
-    educ_basica = "Educación básica",
-    educ_superior = "Educación superior",
-    educ_institutos = "Educación institutos"
-  )) %>%
+  mutate(base_datos = etiqueta_base(dataset)) %>%
   select(base_datos, n_variables) %>%
   gt() %>%
-  tab_header(title = "Cantidad de variables por base") %>%
+  tab_header(title = "Cantidad de variables por base de datos") %>%
   cols_label(base_datos = "Base de datos", n_variables = "N. variables") %>%
   fmt_number(columns = n_variables, decimals = 0, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** En estructura de variables, las bases más ricas son `r resumen_vars %>% arrange(desc(n_variables)) %>% slice(1) %>% pull(dataset)` (`r resumen_vars %>% arrange(desc(n_variables)) %>% slice(1) %>% pull(n_variables)` variables) y `r resumen_vars %>% arrange(desc(n_variables)) %>% slice(2) %>% pull(dataset)` (`r resumen_vars %>% arrange(desc(n_variables)) %>% slice(2) %>% pull(n_variables)`), mientras que las más compactas son `r resumen_vars %>% arrange(n_variables) %>% slice(1) %>% pull(dataset)` y `r resumen_vars %>% arrange(n_variables) %>% slice(2) %>% pull(dataset)`.
+**Comentario de análisis.** En estructura de variables, las bases más ricas son `r resumen_vars %>% arrange(desc(n_variables)) %>% slice(1) %>% pull(dataset) %>% etiqueta_base()` (`r resumen_vars %>% arrange(desc(n_variables)) %>% slice(1) %>% pull(n_variables)` variables) y `r resumen_vars %>% arrange(desc(n_variables)) %>% slice(2) %>% pull(dataset) %>% etiqueta_base()` (`r resumen_vars %>% arrange(desc(n_variables)) %>% slice(2) %>% pull(n_variables)`), mientras que las más compactas son `r resumen_vars %>% arrange(n_variables) %>% slice(1) %>% pull(dataset) %>% etiqueta_base()` y `r resumen_vars %>% arrange(n_variables) %>% slice(2) %>% pull(dataset) %>% etiqueta_base()`.
 
 ```{r}
 dicc_path <- file.path(base_dir, "datasets_finales", "02_diccionario", "diccionario_unificado.csv")
@@ -334,23 +390,14 @@ catalogo_detalle <- catalogo_vars %>%
   mutate(descripcion_variable = replace_na(descripcion_variable, "Sin descripción en diccionario"))
 
 catalogo_detalle %>%
-  mutate(base_datos = recode(dataset,
-    mtpe = "Trabajo",
-    migraciones = "Migraciones",
-    salud_atenciones = "Salud atenciones",
-    salud_afiliados = "Salud afiliados",
-    educ_basica = "Educación básica",
-    educ_superior = "Educación superior",
-    educ_institutos = "Educación institutos"
-  )) %>%
-  select(base_datos, variable, tipo_dato, descripcion_variable) %>%
+  mutate(base_datos = etiqueta_base(dataset)) %>%
+  select(base_datos, variable, descripcion_variable) %>%
   arrange(base_datos, variable) %>%
   gt(groupname_col = "base_datos") %>%
-  tab_header(title = "Catálogo de variables por base (etiqueta y tipo)") %>%
+  tab_header(title = "Catálogo de variables por base de datos") %>%
   cols_label(
-    variable = "Variable",
-    tipo_dato = "Tipo",
-    descripcion_variable = "Descripción"
+    variable = "Nombre de variable",
+    descripcion_variable = "Etiqueta o descripción"
   ) %>%
   tab_options(table.font.size = px(12))
 ```
@@ -372,6 +419,13 @@ mtpe %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico Trabajo") %>%
+  cols_label(
+    n = "Registros",
+    anio_min = "Año mínimo",
+    anio_max = "Año máximo",
+    remuneracion_media = "Remuneración media (S/)",
+    remuneracion_mediana = "Remuneración mediana (S/)"
+  ) %>%
   fmt_number(columns = c(n, anio_min, anio_max), decimals = 0, use_seps = TRUE) %>%
   fmt_number(columns = c(remuneracion_media, remuneracion_mediana), decimals = 2, use_seps = TRUE)
 ```
@@ -379,7 +433,7 @@ mtpe %>%
 **Comentario de análisis.** Trabajo cubre `r min(mtpe$anio, na.rm=TRUE)`-`r max(mtpe$anio, na.rm=TRUE)` con `r scales::comma(nrow(mtpe))` observaciones. La media salarial (`r round(mean(mtpe$remuneracion_soles, na.rm=TRUE),2)`) supera la mediana (`r round(median(mtpe$remuneracion_soles, na.rm=TRUE),2)`), confirmando distribución sesgada hacia salarios altos.
 
 ```{r}
-tabla_frecuencia_gt(mtpe, actividad_economica, n_top = 12, title = "Top 12 actividades económicas")
+tabla_frecuencia_gt(mtpe, actividad_economica, n_top = 12, title = "Principales 12 actividades económicas", etiqueta_categoria = "Actividad económica")
 ```
 
 **Comentario de análisis.** El sector más frecuente es **`r mtpe %>% count(actividad_economica, sort=TRUE) %>% slice(1) %>% pull(actividad_economica)`** con `r scales::comma(mtpe %>% count(actividad_economica, sort=TRUE) %>% slice(1) %>% pull(n))` registros, mostrando concentración sectorial marcada.
@@ -429,11 +483,7 @@ mtpe_bi <- mtpe %>%
   )
 
 chi_mtpe <- prueba_chi(mtpe_bi, tamano_empresa_top, tipo_contrato_top)
-chi_mtpe %>%
-  gt() %>%
-  tab_header(title = "Prueba Chi-cuadrado: tamaño de empresa vs tipo de contrato") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_mtpe, "Prueba Chi-cuadrado: tamaño de empresa vs tipo de contrato")
 ```
 
 **Comentario de análisis.** Plan técnico: contrastamos H0 (independencia entre tamaño de empresa y tipo de contrato) con α=0.05. Resultado: χ²=`r round(chi_mtpe$estadistico,3)`, gl=`r chi_mtpe$gl`, p=`r signif(chi_mtpe$p_value,4)`, V de Cramér=`r round(chi_mtpe$cramer_v,3)` (`r dplyr::case_when(chi_mtpe$cramer_v < 0.1 ~ "despreciable", chi_mtpe$cramer_v < 0.3 ~ "bajo", chi_mtpe$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_mtpe$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: el tipo de contrato sí varía con el tamaño empresarial, aunque con magnitud práctica contenida.
@@ -444,11 +494,7 @@ kw_mtpe <- mtpe %>%
   mutate(nivel_top = forcats::fct_lump_n(as.factor(nivel_educativo), n = 6)) %>%
   prueba_num_vs_cat(remuneracion_soles, nivel_top)
 
-kw_mtpe %>%
-  gt() %>%
-  tab_header(title = "Prueba de diferencias de remuneración por nivel educativo") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(kw_mtpe, "Prueba de diferencias de remuneración por nivel educativo")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de remuneración entre niveles educativos), α=0.05. Resultado `r kw_mtpe$prueba`: estadístico=`r round(kw_mtpe$estadistico,3)`, p=`r signif(kw_mtpe$p_value,4)`, n=`r kw_mtpe$n`. Decisión: **`r ifelse(kw_mtpe$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: existen diferencias salariales por nivel educativo, coherentes con estratificación del ingreso en el mercado formal.
@@ -495,7 +541,16 @@ glance_mtpe %>%
   select(r.squared, adj.r.squared, sigma, statistic, p.value, nobs) %>%
   gt() %>%
   tab_header(title = "Métricas del modelo lineal Trabajo") %>%
-  fmt_number(columns = everything(), decimals = 4)
+  cols_label(
+    r.squared = "R²",
+    adj.r.squared = "R² ajustado",
+    sigma = "Error estándar residual",
+    statistic = "Estadístico F",
+    p.value = "p-valor",
+    nobs = "Observaciones"
+  ) %>%
+  fmt_number(columns = c(r.squared, adj.r.squared, sigma, statistic, p.value), decimals = 4) %>%
+  fmt_number(columns = nobs, decimals = 0, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** El ajuste global (R² ajustado = `r round(glance_mtpe$adj.r.squared, 3)`) es razonable para microdatos administrativos: el modelo explica parte de la variación salarial, aunque no toda.
@@ -515,13 +570,21 @@ mig %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico MIGRACIONES") %>%
-  fmt_number(columns = c(n, edad_media, edad_mediana), decimals = 2, use_seps = TRUE)
+  cols_label(
+    n = "Registros",
+    fecha_min = "Fecha mínima de ingreso",
+    fecha_max = "Fecha máxima de ingreso",
+    edad_media = "Edad media",
+    edad_mediana = "Edad mediana"
+  ) %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
+  fmt_number(columns = c(edad_media, edad_mediana), decimals = 2, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** MIGRACIONES registra `r scales::comma(nrow(mig))` observaciones entre `r min(mig$fecha_ingreso, na.rm=TRUE)` y `r max(mig$fecha_ingreso, na.rm=TRUE)`, con edad media de `r round(mean(mig$edad, na.rm=TRUE),1)` años.
 
 ```{r}
-tabla_frecuencia_gt(mig, estado_migratorio, n_top = 10, title = "Estado migratorio")
+tabla_frecuencia_gt(mig, estado_migratorio, n_top = 10, title = "Estado migratorio", etiqueta_categoria = "Estado migratorio")
 ```
 
 **Comentario de análisis.** El estado predominante es **`r mig %>% count(estado_migratorio, sort=TRUE) %>% slice(1) %>% pull(estado_migratorio)`** (`r scales::comma(mig %>% count(estado_migratorio, sort=TRUE) %>% slice(1) %>% pull(n))` casos), marcando el perfil principal de regularidad.
@@ -564,11 +627,7 @@ chi_mig <- mig %>%
   ) %>%
   prueba_chi(sexo, estado_migratorio_top)
 
-chi_mig %>%
-  gt() %>%
-  tab_header(title = "Chi-cuadrado: sexo vs estado migratorio") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_mig, "Chi-cuadrado: sexo vs estado migratorio")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (sexo y estado migratorio son independientes), α=0.05. Resultado: χ²=`r round(chi_mig$estadistico,3)`, gl=`r chi_mig$gl`, p=`r signif(chi_mig$p_value,4)`, V=`r round(chi_mig$cramer_v,3)` (`r dplyr::case_when(chi_mig$cramer_v < 0.1 ~ "despreciable", chi_mig$cramer_v < 0.3 ~ "bajo", chi_mig$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_mig$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la composición migratoria por sexo presenta diferencias, pero de tamaño no grande.
@@ -579,11 +638,7 @@ kw_mig <- mig %>%
   mutate(estado_migratorio_top = forcats::fct_lump_n(as.factor(estado_migratorio), n = 4)) %>%
   prueba_num_vs_cat(edad, estado_migratorio_top)
 
-kw_mig %>%
-  gt() %>%
-  tab_header(title = "Diferencias de edad por estado migratorio") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(kw_mig, "Diferencias de edad por estado migratorio")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de edad entre estados migratorios), α=0.05. Resultado `r kw_mig$prueba`: estadístico=`r round(kw_mig$estadistico,3)`, p=`r signif(kw_mig$p_value,4)`, n=`r kw_mig$n`, grupos=`r kw_mig$grupos`. Decisión: **`r ifelse(kw_mig$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: hay evidencia de perfiles etarios distintos entre estados migratorios.
@@ -609,15 +664,16 @@ mig_mod <- mig %>%
 
 if (dplyr::n_distinct(mig_mod$irregular_bin) == 2) {
   mod_mig <- glm(irregular_bin ~ edad + sexo + nivel_educativo + medio_transporte + anio, data = mig_mod, family = binomial())
-  tabla_modelo_gt(mod_mig, exponentiate = TRUE, title = "Logit MIGRACIONES: OR de condición irregular")
+  tabla_modelo_gt(mod_mig, exponentiate = TRUE, title = "Modelo logístico MIGRACIONES: razón de momios (OR) de condición irregular")
 } else {
   tibble(mensaje = "No hay variación suficiente en la dependiente irregular_bin para ajustar logit.") %>%
     gt() %>%
-    tab_header(title = "Modelo MIGRACIONES")
+    tab_header(title = "Modelo MIGRACIONES") %>%
+    cols_label(mensaje = "Mensaje")
 }
 ```
 
-**Comentario de análisis.** Este logit reporta OR ajustados de condición irregular. OR > 1 indica mayor odds de irregularidad frente a la categoría de referencia, controlando por el resto de covariables.
+**Comentario de análisis.** Este modelo logístico reporta razones de momios (OR) ajustadas de condición irregular. OR > 1 indica mayor probabilidad relativa de irregularidad frente a la categoría de referencia, controlando por el resto de covariables.
 
 # SALUD - Atenciones {#salud-atenciones}
 
@@ -633,13 +689,20 @@ salud_at %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico SALUD (Atenciones)") %>%
-  fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
+  cols_label(
+    n = "Registros",
+    anio_min = "Año mínimo de atención",
+    anio_max = "Año máximo de atención",
+    edad_media = "Edad media"
+  ) %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
+  fmt_number(columns = c(anio_min, anio_max, edad_media), decimals = 2, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** SALUD atenciones concentra `r scales::comma(nrow(salud_at))` registros (años `r min(salud_at$anio_atencion, na.rm=TRUE)`-`r max(salud_at$anio_atencion, na.rm=TRUE)`), con edad media `r round(mean(salud_at$edad, na.rm=TRUE),1)`.
 
 ```{r}
-tabla_frecuencia_gt(salud_at, servicio_descripcion, n_top = 12, title = "Top 12 servicios de atención")
+tabla_frecuencia_gt(salud_at, servicio_descripcion, n_top = 12, title = "Principales 12 servicios de atención", etiqueta_categoria = "Servicio de atención")
 ```
 
 **Comentario de análisis.** El servicio más frecuente es **`r salud_at %>% count(servicio_descripcion, sort=TRUE) %>% slice(1) %>% pull(servicio_descripcion)`** (`r scales::comma(salud_at %>% count(servicio_descripcion, sort=TRUE) %>% slice(1) %>% pull(n))` atenciones), evidenciando su peso central en la demanda.
@@ -678,7 +741,7 @@ p_salud_diag <- ggplot(diag_top, aes(x = n, y = etiqueta_plot)) +
   geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.6) +
   scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.16))) +
   labs(
-    title = "Top 12 diagnósticos (código CIE)",
+    title = "Principales 12 diagnósticos (código CIE)",
     subtitle = "Las descripciones completas se muestran en la tabla de referencia",
     x = "Número de atenciones",
     y = "Código diagnóstico"
@@ -699,6 +762,11 @@ diag_top %>%
   ) %>%
   gt() %>%
   tab_header(title = "Referencia de diagnósticos (nombre completo)") %>%
+  cols_label(
+    cod_diagnostico = "Código CIE",
+    descripcion_diagnostica = "Descripción diagnóstica",
+    n = "Atenciones"
+  ) %>%
   fmt_number(columns = n, decimals = 0, use_seps = TRUE)
 ```
 
@@ -711,11 +779,7 @@ salud_at_bi <- salud_at %>%
   mutate(servicio_top = forcats::fct_lump_n(as.factor(servicio_descripcion), n = 8))
 
 chi_salud <- prueba_chi(salud_at_bi, sexo, servicio_top)
-chi_salud %>%
-  gt() %>%
-  tab_header(title = "Chi-cuadrado: sexo vs servicio de atención") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_salud, "Chi-cuadrado: sexo vs servicio de atención")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (sexo y tipo de servicio son independientes), α=0.05. Resultado: χ²=`r round(chi_salud$estadistico,3)`, gl=`r chi_salud$gl`, p=`r signif(chi_salud$p_value,4)`, V=`r round(chi_salud$cramer_v,3)` (`r dplyr::case_when(chi_salud$cramer_v < 0.1 ~ "despreciable", chi_salud$cramer_v < 0.3 ~ "bajo", chi_salud$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_salud$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: existe diferencia por sexo en el patrón de uso de servicios, con magnitud práctica a evaluar mediante V.
@@ -725,11 +789,7 @@ kw_salud <- salud_at %>%
   mutate(emergencia_bin = if_else(str_detect(str_to_lower(servicio_descripcion), "emerg"), "Emergencia", "No emergencia")) %>%
   prueba_num_vs_cat(edad, emergencia_bin)
 
-kw_salud %>%
-  gt() %>%
-  tab_header(title = "Diferencia de edad: atención de emergencia vs no emergencia") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(kw_salud, "Diferencia de edad: atención de emergencia vs no emergencia")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de edad entre emergencia y no emergencia), α=0.05. Resultado `r kw_salud$prueba`: estadístico=`r round(kw_salud$estadistico,3)`, p=`r signif(kw_salud$p_value,4)`, n=`r kw_salud$n`. Decisión: **`r ifelse(kw_salud$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la estructura etaria del uso de emergencia difiere de la no emergencia.
@@ -749,7 +809,7 @@ salud_mod <- salud_at %>%
   filter(!is.na(emergencia_bin), !is.na(edad), !is.na(sexo), !is.na(provincia), !is.na(anio_atencion))
 
 mod_salud <- glm(emergencia_bin ~ edad + sexo + provincia + anio_atencion, data = salud_mod, family = binomial())
-tabla_modelo_gt(mod_salud, exponentiate = TRUE, title = "Logit SALUD: OR de atención de emergencia")
+tabla_modelo_gt(mod_salud, exponentiate = TRUE, title = "Modelo logístico SALUD: razón de momios (OR) de atención de emergencia")
 ```
 
 **Comentario de análisis.** El modelo estima probabilidad relativa de uso de emergencia (OR), ajustando por edad, sexo, territorio y año; útil para hipótesis explicativas de demanda.
@@ -768,13 +828,20 @@ salud_af %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico SALUD (Afiliados)") %>%
-  fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
+  cols_label(
+    n = "Registros",
+    anio_min = "Año mínimo de afiliación",
+    anio_max = "Año máximo de afiliación",
+    edad_media = "Edad media"
+  ) %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
+  fmt_number(columns = c(anio_min, anio_max, edad_media), decimals = 2, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** En afiliados hay `r scales::comma(nrow(salud_af))` registros y edad media `r round(mean(salud_af$edad, na.rm=TRUE),1)`, más baja que en atenciones, sugiriendo una base de cobertura relativamente joven.
 
 ```{r}
-tabla_frecuencia_gt(salud_af, provincia, n_top = 12, title = "Top 12 provincias (afiliados)")
+tabla_frecuencia_gt(salud_af, provincia, n_top = 12, title = "Principales 12 provincias (afiliados)", etiqueta_categoria = "Provincia")
 ```
 
 **Comentario de análisis.** Muestra la concentración territorial de afiliados y permite comparar si coincide con el patrón observado en atenciones.
@@ -796,22 +863,14 @@ chi_saf <- salud_af %>%
   mutate(grupo_top = forcats::fct_lump_n(as.factor(grupo_etario), n = 6)) %>%
   prueba_chi(sexo, grupo_top)
 
-chi_saf %>%
-  gt() %>%
-  tab_header(title = "Chi-cuadrado: sexo vs grupo etario (afiliados)") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_saf, "Chi-cuadrado: sexo vs grupo etario (afiliados)")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (sexo y grupo etario son independientes), α=0.05. Resultado: χ²=`r round(chi_saf$estadistico,3)`, gl=`r chi_saf$gl`, p=`r signif(chi_saf$p_value,4)`, V=`r round(chi_saf$cramer_v,3)` (`r dplyr::case_when(chi_saf$cramer_v < 0.1 ~ "despreciable", chi_saf$cramer_v < 0.3 ~ "bajo", chi_saf$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_saf$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: hay diferencias por sexo en composición etaria de afiliación.
 
 ```{r}
 wil_saf <- prueba_num_vs_cat(salud_af, edad, sexo)
-wil_saf %>%
-  gt() %>%
-  tab_header(title = "Diferencia de edad por sexo (afiliados)") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(wil_saf, "Diferencia de edad por sexo (afiliados)")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de edad por sexo), α=0.05. Resultado `r wil_saf$prueba`: estadístico=`r round(wil_saf$estadistico,3)`, p=`r signif(wil_saf$p_value,4)`, n=`r wil_saf$n`. Decisión: **`r ifelse(wil_saf$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la edad difiere por sexo en afiliación, lo que sugiere perfiles demográficos distintos.
@@ -831,10 +890,10 @@ saf_mod <- salud_af %>%
   filter(!is.na(adulto_mayor_bin), !is.na(sexo), !is.na(provincia), !is.na(anio_afiliacion))
 
 mod_saf <- glm(adulto_mayor_bin ~ sexo + provincia + anio_afiliacion, data = saf_mod, family = binomial())
-tabla_modelo_gt(mod_saf, exponentiate = TRUE, title = "Logit SALUD afiliados: OR de adulto mayor")
+tabla_modelo_gt(mod_saf, exponentiate = TRUE, title = "Modelo logístico SALUD afiliados: razón de momios (OR) de adulto mayor")
 ```
 
-**Comentario de análisis.** Este logit permite detectar qué factores se asocian con mayor odds de afiliados adultos mayores, controlando diferencias territoriales y temporales.
+**Comentario de análisis.** Este modelo logístico permite detectar qué factores se asocian con mayor probabilidad relativa de afiliados adultos mayores, controlando diferencias territoriales y temporales.
 
 # EDUCACIÓN BÁSICA {#educ-basica}
 
@@ -851,13 +910,21 @@ educ_bas %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico EDUCACIÓN básica") %>%
-  fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
+  cols_label(
+    n = "Registros",
+    edad_media = "Edad media",
+    edad_mediana = "Edad mediana",
+    edad_min = "Edad mínima",
+    edad_max = "Edad máxima"
+  ) %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
+  fmt_number(columns = c(edad_media, edad_mediana, edad_min, edad_max), decimals = 2, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** EDUC básica reúne `r scales::comma(nrow(educ_bas))` casos, mediana de edad `r median(educ_bas$edad_estudiante, na.rm=TRUE)` y predominio de cohortes de primaria/secundaria.
 
 ```{r}
-tabla_frecuencia_gt(educ_bas, nivel, n_top = 10, title = "Distribución por nivel educativo")
+tabla_frecuencia_gt(educ_bas, nivel, n_top = 10, title = "Distribución por nivel educativo", etiqueta_categoria = "Nivel educativo")
 ```
 
 **Comentario de análisis.** El nivel dominante es **`r educ_bas %>% count(nivel, sort=TRUE) %>% slice(1) %>% pull(nivel)`** con `r scales::comma(educ_bas %>% count(nivel, sort=TRUE) %>% slice(1) %>% pull(n))` estudiantes, por lo que la política de permanencia debería concentrarse ahí.
@@ -884,22 +951,14 @@ plotly::ggplotly(p_eb_nivel)
 
 ```{r}
 chi_eb <- prueba_chi(educ_bas, sexo, nivel)
-chi_eb %>%
-  gt() %>%
-  tab_header(title = "Chi-cuadrado: sexo vs nivel educativo") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_eb, "Chi-cuadrado: sexo vs nivel educativo")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (sexo y nivel educativo son independientes), α=0.05. Resultado: χ²=`r round(chi_eb$estadistico,3)`, gl=`r chi_eb$gl`, p=`r signif(chi_eb$p_value,4)`, V=`r round(chi_eb$cramer_v,3)` (`r dplyr::case_when(chi_eb$cramer_v < 0.1 ~ "despreciable", chi_eb$cramer_v < 0.3 ~ "bajo", chi_eb$cramer_v < 0.5 ~ "moderado", TRUE ~ "alto")`). Decisión: **`r ifelse(chi_eb$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: la distribución por sexo cambia entre niveles, con magnitud resumida por V.
 
 ```{r}
 kw_eb <- prueba_num_vs_cat(educ_bas, edad_estudiante, nivel)
-kw_eb %>%
-  gt() %>%
-  tab_header(title = "Diferencias de edad por nivel educativo") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(kw_eb, "Diferencias de edad por nivel educativo")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de edad entre niveles), α=0.05. Resultado `r kw_eb$prueba`: estadístico=`r round(kw_eb$estadistico,3)`, p=`r signif(kw_eb$p_value,4)`, n=`r kw_eb$n`, grupos=`r kw_eb$grupos`. Decisión: **`r ifelse(kw_eb$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: las diferencias etarias por nivel son claras y esperables por progresión escolar.
@@ -919,10 +978,10 @@ eb_mod <- educ_bas %>%
   filter(!is.na(secundaria_bin), !is.na(edad_estudiante), !is.na(sexo), !is.na(gestion), !is.na(provincia))
 
 mod_eb <- glm(secundaria_bin ~ edad_estudiante + sexo + gestion + provincia, data = eb_mod, family = binomial())
-tabla_modelo_gt(mod_eb, exponentiate = TRUE, title = "Logit EDUC básica: OR de estar en secundaria")
+tabla_modelo_gt(mod_eb, exponentiate = TRUE, title = "Modelo logístico EDUC básica: razón de momios (OR) de estar en secundaria")
 ```
 
-**Comentario de análisis.** El modelo estima odds de estar en secundaria y permite separar el efecto de edad del contexto institucional/territorial.
+**Comentario de análisis.** El modelo estima probabilidad relativa de estar en secundaria y permite separar el efecto de edad del contexto institucional y territorial.
 
 # EDUCACIÓN SUPERIOR (programas) {#educ-superior}
 
@@ -938,13 +997,20 @@ educ_sup %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico EDUC superior") %>%
-  fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
+  cols_label(
+    n = "Registros",
+    anio_min = "Año mínimo",
+    anio_max = "Año máximo",
+    edad_media = "Edad media"
+  ) %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
+  fmt_number(columns = c(anio_min, anio_max, edad_media), decimals = 2, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** Este resumen ubica una base pequeña; por ello el análisis inferencial debe leerse como exploratorio y no confirmatorio fuerte.
 
 ```{r}
-tabla_frecuencia_gt(educ_sup, programa_estudios, n_top = 12, title = "Top programas de estudios")
+tabla_frecuencia_gt(educ_sup, programa_estudios, n_top = 12, title = "Principales programas de estudios", etiqueta_categoria = "Programa de estudios")
 ```
 
 **Comentario de análisis.** Aquí se observa la concentración por programas, útil para discutir inserción formativa y posibles trayectorias de empleabilidad.
@@ -964,22 +1030,14 @@ p_es_trend
 
 ```{r}
 chi_es <- prueba_chi(educ_sup, sexo, tipo_estudiante)
-chi_es %>%
-  gt() %>%
-  tab_header(title = "Chi-cuadrado: sexo vs tipo de estudiante") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_es, "Chi-cuadrado: sexo vs tipo de estudiante")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (sexo y tipo de estudiante son independientes), α=0.05. Resultado: χ²=`r round(chi_es$estadistico,3)`, gl=`r chi_es$gl`, p=`r signif(chi_es$p_value,4)`, V=`r round(chi_es$cramer_v,3)`, n=`r chi_es$n`. Decisión: **`r ifelse(chi_es$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: con p=`r signif(chi_es$p_value,4)`, no hay evidencia suficiente para afirmar diferencia por sexo en tipo de estudiante en esta muestra.
 
 ```{r}
 wil_es <- prueba_num_vs_cat(educ_sup, edad, sexo)
-wil_es %>%
-  gt() %>%
-  tab_header(title = "Diferencia de edad por sexo (educación superior)") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(wil_es, "Diferencia de edad por sexo (educación superior)")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de edad por sexo), α=0.05. Resultado `r wil_es$prueba`: estadístico=`r round(wil_es$estadistico,3)`, p=`r signif(wil_es$p_value,4)`, n=`r wil_es$n`. Decisión: **`r ifelse(wil_es$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: este contraste sugiere `r ifelse(wil_es$p_value < 0.05, "diferencia etaria por sexo", "ausencia de evidencia robusta de diferencia etaria por sexo")` en educación superior.
@@ -1011,9 +1069,10 @@ mod_es <- tryCatch(
 if (is.null(mod_es)) {
   tibble(mensaje = "No fue posible ajustar el modelo logit (muestra pequeña o separación).") %>%
     gt() %>%
-    tab_header(title = "Modelo EDUC superior")
+    tab_header(title = "Modelo EDUC superior") %>%
+    cols_label(mensaje = "Mensaje")
 } else {
-  tabla_modelo_gt(mod_es, exponentiate = TRUE, title = "Logit EDUC superior: OR de condición becado")
+  tabla_modelo_gt(mod_es, exponentiate = TRUE, title = "Modelo logístico EDUC superior: razón de momios (OR) de condición becado")
 }
 ```
 
@@ -1033,13 +1092,20 @@ educ_ins %>%
   ) %>%
   gt() %>%
   tab_header(title = "Resumen numérico EDUC institutos") %>%
-  fmt_number(columns = everything(), decimals = 2, use_seps = TRUE)
+  cols_label(
+    n = "Registros",
+    anio_min = "Año mínimo de ingreso",
+    anio_max = "Año máximo de ingreso",
+    edad_media_aprox = "Edad media aproximada (2024)"
+  ) %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE) %>%
+  fmt_number(columns = c(anio_min, anio_max, edad_media_aprox), decimals = 2, use_seps = TRUE)
 ```
 
 **Comentario de análisis.** Esta base es pequeña pero valiosa como evidencia cualitativa-cuantitativa de trayectorias en institutos durante 2016-2024.
 
 ```{r}
-tabla_frecuencia_gt(educ_ins, carrera, n_top = 10, title = "Carreras observadas")
+tabla_frecuencia_gt(educ_ins, carrera, n_top = 10, title = "Carreras observadas", etiqueta_categoria = "Carrera")
 ```
 
 **Comentario de análisis.** La tabla ayuda a identificar preferencias formativas y posibles nichos ocupacionales vinculables con la evidencia de Trabajo.
@@ -1060,22 +1126,14 @@ p_ei_periodo
 
 ```{r}
 chi_ei <- prueba_chi(educ_ins, sexo, gestion)
-chi_ei %>%
-  gt() %>%
-  tab_header(title = "Chi-cuadrado: sexo vs gestión (institutos)") %>%
-  fmt_number(columns = c(estadistico, gl, cramer_v), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(chi_ei, "Chi-cuadrado: sexo vs gestión (institutos)")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (sexo y gestión institucional son independientes), α=0.05. Resultado: χ²=`r round(chi_ei$estadistico,3)`, gl=`r chi_ei$gl`, p=`r signif(chi_ei$p_value,4)`, V=`r round(chi_ei$cramer_v,3)`, n=`r chi_ei$n`. Decisión: **`r ifelse(chi_ei$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: por n pequeño, este resultado se usa como evidencia exploratoria de posibles diferencias por sexo en tipo de gestión.
 
 ```{r}
 wil_ei <- prueba_num_vs_cat(educ_ins, edad_aprox_2024, sexo)
-wil_ei %>%
-  gt() %>%
-  tab_header(title = "Diferencia de edad aproximada por sexo (institutos)") %>%
-  fmt_number(columns = c(estadistico), decimals = 3) %>%
-  fmt_number(columns = p_value, decimals = 6)
+tabla_prueba_gt(wil_ei, "Diferencia de edad aproximada por sexo (institutos)")
 ```
 
 **Comentario de análisis.** Plan técnico: H0 (misma distribución de edad aproximada por sexo), α=0.05. Resultado `r wil_ei$prueba`: estadístico=`r round(wil_ei$estadistico,3)`, p=`r signif(wil_ei$p_value,4)`, n=`r wil_ei$n`. Decisión: **`r ifelse(wil_ei$p_value < 0.05, "se rechaza H0", "no se rechaza H0")`**. Interpretación: se observa `r ifelse(wil_ei$p_value < 0.05, "diferencia etaria por sexo", "ausencia de evidencia concluyente de diferencia")`, con inferencia limitada por el tamaño muestral.
@@ -1098,7 +1156,8 @@ if (nrow(ei_mod) >= 15) {
 } else {
   tibble(mensaje = "Muestra insuficiente para modelo lineal mínimamente estable.") %>%
     gt() %>%
-    tab_header(title = "Modelo EDUC institutos")
+    tab_header(title = "Modelo EDUC institutos") %>%
+    cols_label(mensaje = "Mensaje")
 }
 ```
 
@@ -1109,19 +1168,25 @@ if (nrow(ei_mod) >= 15) {
 ```{r}
 resumen_modelos <- tribble(
   ~dataset, ~dependiente, ~tipo_modelo, ~predictores_clave, ~nota,
-  "Trabajo", "log(remuneracion_soles)", "LM", "año, categoría ocupacional, nivel educativo, tamaño empresa", "Asociaciones salariales estructurales",
-  "MIGRACIONES", "irregular_bin", "Logit", "edad, sexo, nivel educativo, transporte, año", "Enfocado a Regulares vs Irregulares",
-  "SALUD atenciones", "emergencia_bin", "Logit", "edad, sexo, provincia, año atención", "Uso de servicios de emergencia",
-  "SALUD afiliados", "adulto_mayor_bin", "Logit", "sexo, provincia, año afiliación", "Perfil etario de afiliación",
-  "EDUC básica", "secundaria_bin", "Logit", "edad estudiante, sexo, gestión, provincia", "Trayectoria educativa por nivel",
-  "EDUC superior", "becado_bin", "Logit", "edad, sexo, turno, año", "Modelo sensible a n pequeño",
-  "EDUC institutos", "edad_aprox_2024", "LM exploratorio", "sexo, ciclo, gestión", "Interpretación cautelosa por n=23"
+  "Trabajo", "Log de remuneración mensual (S/)", "Modelo lineal", "año, categoría ocupacional, nivel educativo, tamaño de empresa", "Asociaciones salariales estructurales",
+  "Migraciones", "Condición migratoria irregular (sí/no)", "Modelo logístico", "edad, sexo, nivel educativo, medio de transporte, año", "Enfoque en regulares vs irregulares",
+  "Salud atenciones", "Atención de emergencia (sí/no)", "Modelo logístico", "edad, sexo, provincia, año de atención", "Uso de servicios de emergencia",
+  "Salud afiliados", "Afiliado adulto mayor (sí/no)", "Modelo logístico", "sexo, provincia, año de afiliación", "Perfil etario de afiliación",
+  "Educación básica", "Matrícula en secundaria (sí/no)", "Modelo logístico", "edad del estudiante, sexo, gestión, provincia", "Trayectoria educativa por nivel",
+  "Educación superior", "Condición de becado (sí/no)", "Modelo logístico", "edad, sexo, turno, año", "Modelo sensible a tamaño muestral pequeño",
+  "Educación institutos", "Edad aproximada en 2024", "Modelo lineal exploratorio", "sexo, ciclo, gestión", "Interpretación cautelosa por n = 23"
 )
 
 resumen_modelos %>%
   gt() %>%
   tab_header(title = "Resumen de estrategia multivariada por base de datos") %>%
-  cols_label(dataset = "Base de datos")
+  cols_label(
+    dataset = "Base de datos",
+    dependiente = "Variable dependiente",
+    tipo_modelo = "Tipo de modelo",
+    predictores_clave = "Predictores clave",
+    nota = "Nota analítica"
+  )
 ```
 
 **Comentario de análisis.** Esta síntesis final conecta cada base con una dependiente analítica concreta, facilitando trazabilidad metodológica para el capítulo de resultados.
@@ -1288,7 +1353,7 @@ diag_geo <- purrr::imap_dfr(dist_counts, function(cnt, nm) {
     select(dist_norm, DISTRITO) %>%
     left_join(cnt, by = "dist_norm")
   tibble(
-    dataset = nm,
+    dataset = etiqueta_base(nm),
     distritos_shp_provincia_cusco = nrow(dist_prov_cusco),
     distritos_con_datos = sum(!is.na(j$n) & j$n > 0),
     distritos_sin_datos = sum(is.na(j$n) | j$n == 0),
@@ -1301,7 +1366,15 @@ diag_geo <- purrr::imap_dfr(dist_counts, function(cnt, nm) {
 diag_geo %>%
   gt() %>%
   tab_header(title = "Diagnóstico de georreferenciación distrital (Provincia del Cusco)") %>%
-  cols_label(dataset = "Base de datos") %>%
+  cols_label(
+    dataset = "Base de datos",
+    distritos_shp_provincia_cusco = "Distritos en shapefile (provincia)",
+    distritos_con_datos = "Distritos con datos",
+    distritos_sin_datos = "Distritos sin datos",
+    registros_totales_dataset = "Registros totales de la base",
+    registros_mapeados = "Registros mapeados",
+    pct_registros_mapeados = "Porcentaje mapeado"
+  ) %>%
   fmt_number(columns = c(distritos_shp_provincia_cusco, distritos_con_datos, distritos_sin_datos, registros_totales_dataset, registros_mapeados), decimals = 0, use_seps = TRUE) %>%
   fmt_number(columns = pct_registros_mapeados, decimals = 2)
 ```
@@ -1347,7 +1420,7 @@ p_map_dist <- ggplot(dist_maps_sf) +
 p_map_dist
 ```
 
-**Comentario de análisis.** El patrón espacial comparado sugiere hotspots recurrentes en el eje urbano (Cusco, San Sebastián, Wanchaq, Santiago), lo que refuerza hipótesis de concentración de servicios y residencia.
+**Comentario de análisis.** El patrón espacial comparado sugiere zonas de concentración recurrentes en el eje urbano (Cusco, San Sebastián, Wanchaq, Santiago), lo que refuerza hipótesis de concentración de servicios y residencia.
 
 ```{r}
 top_dist_multi <- dist_maps_sf %>%
@@ -1361,16 +1434,16 @@ top_dist_multi <- dist_maps_sf %>%
 
 top_dist_multi %>%
   gt() %>%
-  tab_header(title = "Top 10 distritos (Provincia del Cusco) por base de datos") %>%
-  cols_label(dataset = "Base de datos") %>%
+  tab_header(title = "Principales 10 distritos (Provincia del Cusco) por base de datos") %>%
+  cols_label(dataset = "Base de datos", DISTRITO = "Distrito", n = "Registros") %>%
   fmt_number(columns = n, decimals = 0, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Los top distritos replican una estructura territorial común entre fuentes; esta consistencia le da robustez a la priorización local propuesta en la tesis.
+**Comentario de análisis.** Los principales distritos replican una estructura territorial común entre fuentes; esta consistencia le da robustez a la priorización local propuesta en la tesis.
 
 # Notas metodológicas finales {#notas}
 
-- Los p-valores deben interpretarse junto con tamaño de efecto (ej. **Cramér's V**) y contexto sustantivo.
+- Los p-valores deben interpretarse junto con tamaño de efecto (ej. **V de Cramér**) y contexto sustantivo.
 - En muestras grandes, es habitual encontrar significancia estadística para efectos pequeños.
 - En muestras pequeñas (educación superior/institutos), priorizar magnitud, dirección y plausibilidad sobre p-valor aislado.
 - Para capítulo inferencial final, conviene agregar:
