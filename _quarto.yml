@@ -8,7 +8,7 @@ website:
   title: "Análisis cuantitativo sobre la población venezolana en Cusco"
   navbar:
     title: false
-    left:
+    right:
       - text: "Introducción"
         href: "index.html#introduccion"
       - text: "MTPE"
