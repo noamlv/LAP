@@ -10,10 +10,64 @@ website:
     left:
       - text: "Introducción"
         href: "index.html#introduccion"
-      - text: "Resultados"
-        href: "index.html#resumen"
+      - text: "MTPE"
+        menu:
+          - text: "Univariado"
+            href: "index.html#mtpe-univariado"
+          - text: "Bivariado"
+            href: "index.html#mtpe-bivariado"
+          - text: "Multivariado"
+            href: "index.html#mtpe-multivariado"
+      - text: "Migraciones"
+        menu:
+          - text: "Univariado"
+            href: "index.html#migraciones-univariado"
+          - text: "Bivariado"
+            href: "index.html#migraciones-bivariado"
+          - text: "Multivariado"
+            href: "index.html#migraciones-multivariado"
+      - text: "Salud"
+        menu:
+          - text: "Atenciones: Univariado"
+            href: "index.html#salud-atenciones-univariado"
+          - text: "Atenciones: Bivariado"
+            href: "index.html#salud-atenciones-bivariado"
+          - text: "Atenciones: Multivariado"
+            href: "index.html#salud-atenciones-multivariado"
+          - text: "Afiliados: Univariado"
+            href: "index.html#salud-afiliados-univariado"
+          - text: "Afiliados: Bivariado"
+            href: "index.html#salud-afiliados-bivariado"
+          - text: "Afiliados: Multivariado"
+            href: "index.html#salud-afiliados-multivariado"
+      - text: "Educación"
+        menu:
+          - text: "Básica: Univariado"
+            href: "index.html#educ-basica-univariado"
+          - text: "Básica: Bivariado"
+            href: "index.html#educ-basica-bivariado"
+          - text: "Básica: Multivariado"
+            href: "index.html#educ-basica-multivariado"
+          - text: "Superior: Univariado"
+            href: "index.html#educ-superior-univariado"
+          - text: "Superior: Bivariado"
+            href: "index.html#educ-superior-bivariado"
+          - text: "Superior: Multivariado"
+            href: "index.html#educ-superior-multivariado"
+          - text: "Institutos: Univariado"
+            href: "index.html#educ-institutos-univariado"
+          - text: "Institutos: Bivariado"
+            href: "index.html#educ-institutos-bivariado"
+          - text: "Institutos: Multivariado"
+            href: "index.html#educ-institutos-multivariado"
+      - text: "Síntesis"
+        href: "index.html#sintesis"
       - text: "Georreferenciación"
-        href: "index.html#georef"
+        menu:
+          - text: "Diagnóstico"
+            href: "index.html#georef-diagnostico"
+          - text: "Mapas distritales"
+            href: "index.html#georef-mapas"
       - text: "Notas"
         href: "index.html#notas"
 
@@ -22,11 +76,12 @@ format:
     toc: false
     toc-depth: 3
     number-sections: true
-    code-fold: true
-    code-tools: true
+    code-fold: false
+    code-tools: false
     df-print: paged
     css: styles.css
 
 execute:
+  echo: false
   warning: false
   message: false
