@@ -262,6 +262,69 @@ resumen_fuentes %>%
 
 **Comentario de análisis.** La escala es claramente desigual: **MTPE** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="mtpe"])`) y **salud_atenciones** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="salud_atenciones"])`) concentran la mayor carga, mientras **educ_superior** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_superior"])`) y **educ_institutos** (`r scales::comma(resumen_fuentes$filas[resumen_fuentes$dataset=="educ_institutos"])`) deben leerse como evidencia exploratoria.
 
+## Inventario de variables disponibles {#inventario-variables}
+
+```{r}
+datasets_list <- list(
+  mtpe = mtpe,
+  migraciones = mig,
+  salud_atenciones = salud_at,
+  salud_afiliados = salud_af,
+  educ_basica = educ_bas,
+  educ_superior = educ_sup,
+  educ_institutos = educ_ins
+)
+
+catalogo_vars <- purrr::imap_dfr(datasets_list, function(df, nm) {
+  tibble(
+    dataset = nm,
+    variable = names(df),
+    tipo_dato = purrr::map_chr(df, ~class(.x)[1])
+  )
+})
+
+resumen_vars <- catalogo_vars %>%
+  count(dataset, name = "n_variables")
+
+resumen_vars %>%
+  gt() %>%
+  tab_header(title = "Cantidad de variables por base") %>%
+  fmt_number(columns = n_variables, decimals = 0, use_seps = TRUE)
+```
+
+**Comentario de análisis.** En estructura de variables, las bases más ricas son `r resumen_vars %>% arrange(desc(n_variables)) %>% slice(1) %>% pull(dataset)` (`r resumen_vars %>% arrange(desc(n_variables)) %>% slice(1) %>% pull(n_variables)` variables) y `r resumen_vars %>% arrange(desc(n_variables)) %>% slice(2) %>% pull(dataset)` (`r resumen_vars %>% arrange(desc(n_variables)) %>% slice(2) %>% pull(n_variables)`), mientras que las más compactas son `r resumen_vars %>% arrange(n_variables) %>% slice(1) %>% pull(dataset)` y `r resumen_vars %>% arrange(n_variables) %>% slice(2) %>% pull(dataset)`.
+
+```{r}
+dicc_path <- file.path(base_dir, "datasets_finales", "02_diccionario", "diccionario_unificado.csv")
+dicc_vars <- if (file.exists(dicc_path)) {
+  readr::read_csv(dicc_path, show_col_types = FALSE) %>%
+    transmute(
+      variable = variable_estandar,
+      descripcion_variable = descripcion
+    ) %>%
+    distinct()
+} else {
+  tibble(variable = character(), descripcion_variable = character())
+}
+
+catalogo_detalle <- catalogo_vars %>%
+  left_join(dicc_vars, by = "variable") %>%
+  mutate(descripcion_variable = replace_na(descripcion_variable, "Sin descripción en diccionario"))
+
+catalogo_detalle %>%
+  arrange(dataset, variable) %>%
+  gt(groupname_col = "dataset") %>%
+  tab_header(title = "Catálogo de variables por base (etiqueta y tipo)") %>%
+  cols_label(
+    variable = "Variable",
+    tipo_dato = "Tipo",
+    descripcion_variable = "Descripción"
+  ) %>%
+  tab_options(table.font.size = px(12))
+```
+
+**Comentario de análisis.** Este inventario muestra qué tan comparable es cada base: variables comunes como `sexo`, `edad`, `provincia` y `distrito` permiten integración analítica; variables específicas (por ejemplo `remuneracion_soles`, `estado_migratorio`, `cod_diagnostico`) aportan profundidad sectorial.
+
 # MTPE - Empleo formal {#mtpe}
 
 ## Univariado {#mtpe-univariado}
