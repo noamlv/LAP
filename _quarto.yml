@@ -5,12 +5,21 @@ project:
     - index.qmd
 
 website:
-  title: "Resultados de Tesis"
-  navbar: false
+  title: "Análisis cuantitativo sobre la población venezolana en Cusco"
+  navbar:
+    left:
+      - text: "Introducción"
+        href: "index.html#introduccion"
+      - text: "Resultados"
+        href: "index.html#resumen"
+      - text: "Georreferenciación"
+        href: "index.html#georef"
+      - text: "Notas"
+        href: "index.html#notas"
 
 format:
   html:
-    toc: true
+    toc: false
     toc-depth: 3
     number-sections: true
     code-fold: true

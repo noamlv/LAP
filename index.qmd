@@ -1,10 +1,10 @@
 ---
-title: "Informe Integrado de Análisis Estadístico (R + Quarto)"
-subtitle: "Tesis - Población venezolana en Cusco"
-author: "Proyecto de tesis"
+title: "Análisis cuantitativo sobre la población venezolana en Cusco"
+subtitle: "Informe técnico para tesis"
+author: "Luz Abarca Paredes"
 format:
   html:
-    toc: true
+    toc: false
     toc-depth: 3
     number-sections: true
     code-fold: true
@@ -15,7 +15,14 @@ execute:
   message: false
 ---
 
-# Enfoque del informe
+# Introducción {#introduccion}
+
+Este informe presenta un análisis cuantitativo integral sobre la población venezolana en Cusco a partir de registros administrativos de empleo, migraciones, salud y educación.  
+Se muestran resultados descriptivos, contrastes bivariados con pruebas de significancia y modelos multivariados explicativos, con una lectura orientada a decisiones y redacción de tesis.
+
+En la parte final se incorpora un módulo de georreferenciación enfocado en **distritos de la provincia del Cusco**, usando shapefiles INEI 2023, para identificar patrones territoriales y hotspots locales.
+
+# Enfoque del informe {#enfoque}
 
 Este documento trabaja **dataset por dataset** con tres niveles:
 
@@ -243,7 +250,7 @@ norm_geo <- function(x) {
 }
 ```
 
-# Resumen general
+# Resumen general {#resumen}
 
 ```{r}
 resumen_fuentes %>%
@@ -254,7 +261,7 @@ resumen_fuentes %>%
 
 **Comentario de análisis.** Esta tabla confirma la escala de trabajo: la mayor carga analítica está en MTPE y SALUD atenciones, mientras que educación superior e institutos son muestras pequeñas y requieren interpretación más cautelosa en inferencia.
 
-# 1) MTPE - Empleo formal
+# 1) MTPE - Empleo formal {#mtpe}
 
 ## 1.1 Univariado
 
@@ -397,7 +404,7 @@ glance_mtpe %>%
 
 **Comentario de análisis.** El ajuste global (R² ajustado = `r round(glance_mtpe$adj.r.squared, 3)`) es razonable para microdatos administrativos: el modelo explica parte de la variación salarial, aunque no toda.
 
-# 2) MIGRACIONES - Residencia y condición migratoria
+# 2) MIGRACIONES - Residencia y condición migratoria {#migraciones}
 
 ## 2.1 Univariado
 
@@ -516,7 +523,7 @@ if (dplyr::n_distinct(mig_mod$irregular_bin) == 2) {
 
 **Comentario de análisis.** Este logit reporta OR ajustados de condición irregular. OR > 1 indica mayor odds de irregularidad frente a la categoría de referencia, controlando por el resto de covariables.
 
-# 3) SALUD - Atenciones
+# 3) SALUD - Atenciones {#salud-atenciones}
 
 ## 3.1 Univariado
 
@@ -623,7 +630,7 @@ tabla_modelo_gt(mod_salud, exponentiate = TRUE, title = "Logit SALUD: OR de aten
 
 **Comentario de análisis.** El modelo estima probabilidad relativa de uso de emergencia (OR), ajustando por edad, sexo, territorio y año; útil para hipótesis explicativas de demanda.
 
-# 4) SALUD - Afiliados
+# 4) SALUD - Afiliados {#salud-afiliados}
 
 ## 4.1 Univariado
 
@@ -705,7 +712,7 @@ tabla_modelo_gt(mod_saf, exponentiate = TRUE, title = "Logit SALUD afiliados: OR
 
 **Comentario de análisis.** Este logit permite detectar qué factores se asocian con mayor odds de afiliados adultos mayores, controlando diferencias territoriales y temporales.
 
-# 5) EDUCACIÓN BÁSICA
+# 5) EDUCACIÓN BÁSICA {#educ-basica}
 
 ## 5.1 Univariado
 
@@ -793,7 +800,7 @@ tabla_modelo_gt(mod_eb, exponentiate = TRUE, title = "Logit EDUC básica: OR de 
 
 **Comentario de análisis.** El modelo estima odds de estar en secundaria y permite separar el efecto de edad del contexto institucional/territorial.
 
-# 6) EDUCACIÓN SUPERIOR (programas)
+# 6) EDUCACIÓN SUPERIOR (programas) {#educ-superior}
 
 ## 6.1 Univariado
 
@@ -888,7 +895,7 @@ if (is.null(mod_es)) {
 
 **Comentario de análisis.** Si el modelo converge, las OR se leen como asociaciones exploratorias de condición becado; si no converge, el propio resultado confirma limitación de tamaño/separación.
 
-# 7) EDUCACIÓN INSTITUTOS (2016-2024)
+# 7) EDUCACIÓN INSTITUTOS (2016-2024) {#educ-institutos}
 
 ## 7.1 Univariado
 
@@ -973,7 +980,7 @@ if (nrow(ei_mod) >= 15) {
 
 **Comentario de análisis.** El modelo lineal es estrictamente exploratorio; su función aquí es ordenar hipótesis para trabajo posterior con más observaciones.
 
-# Síntesis de modelos propuestos
+# Síntesis de modelos propuestos {#sintesis}
 
 ```{r}
 resumen_modelos <- tribble(
@@ -994,43 +1001,23 @@ resumen_modelos %>%
 
 **Comentario de análisis.** Esta síntesis final conecta cada base con una dependiente analítica concreta, facilitando trazabilidad metodológica para el capítulo de resultados.
 
-# 8) Georreferenciación y análisis espacial (SHP INEI 2023)
+# 8) Georreferenciación y análisis espacial (Provincia del Cusco) {#georef}
 
-## 8.1 Lectura de capas y diagnóstico de unión
+## 8.1 Lectura de capas y diagnóstico de unión (solo Provincia del Cusco)
 
 ```{r}
 shp_dir <- file.path(base_dir, "datasets_finales", "SHP")
-shp_dep <- sf::st_read(file.path(shp_dir, "Departamental INEI 2023 geogpsperu SuyoPomalia.shp"), quiet = TRUE)
-shp_prov <- sf::st_read(file.path(shp_dir, "Provincial INEI 2023 geogpsperu SuyoPomalia.shp"), quiet = TRUE)
 shp_dist <- sf::st_read(file.path(shp_dir, "Distrital INEI 2023 geogpsperu SuyoPomalia.shp"), quiet = TRUE)
 
-prov_cusco <- shp_prov %>%
-  mutate(
-    dep_norm = norm_geo(DEPARTAMEN),
-    prov_norm = norm_geo(PROVINCIA)
-  ) %>%
-  filter(dep_norm == "CUSCO")
-
-dist_cusco <- shp_dist %>%
+dist_prov_cusco <- shp_dist %>%
   mutate(
     dep_norm = norm_geo(DEPARTAMEN),
     prov_norm = norm_geo(PROVINCIA),
     dist_norm = norm_geo(DISTRITO)
   ) %>%
-  filter(dep_norm == "CUSCO")
+  filter(dep_norm == "CUSCO", prov_norm == "CUSCO")
 
-agg_prov <- function(df, prov_col, dep_col = NULL) {
-  d <- df
-  if (!is.null(dep_col) && dep_col %in% names(d)) {
-    d <- d %>% filter(norm_geo(.data[[dep_col]]) == "CUSCO")
-  }
-  d %>%
-    mutate(prov_norm = norm_geo(.data[[prov_col]])) %>%
-    filter(!is.na(prov_norm), prov_norm != "") %>%
-    count(prov_norm, name = "n")
-}
-
-agg_dist <- function(df, prov_col, dist_col, dep_col = NULL) {
+agg_dist_prov_cusco <- function(df, prov_col, dist_col, dep_col = NULL) {
   d <- df
   if (!is.null(dep_col) && dep_col %in% names(d)) {
     d <- d %>% filter(norm_geo(.data[[dep_col]]) == "CUSCO")
@@ -1040,35 +1027,29 @@ agg_dist <- function(df, prov_col, dist_col, dep_col = NULL) {
       prov_norm = norm_geo(.data[[prov_col]]),
       dist_norm = norm_geo(.data[[dist_col]])
     ) %>%
-    filter(!is.na(prov_norm), prov_norm != "", !is.na(dist_norm), dist_norm != "") %>%
-    count(prov_norm, dist_norm, name = "n")
+    filter(prov_norm == "CUSCO", !is.na(dist_norm), dist_norm != "") %>%
+    count(dist_norm, name = "n")
 }
 
-prov_counts <- list(
-  migraciones = agg_prov(mig, "provincia", "departamento"),
-  salud_atenciones = agg_prov(salud_at, "provincia"),
-  salud_afiliados = agg_prov(salud_af, "provincia"),
-  educ_basica = agg_prov(educ_bas, "provincia", "departamento"),
-  educ_superior = agg_prov(educ_sup, "provincia", "departamento"),
-  educ_institutos = agg_prov(educ_ins, "provincia")
-)
-
 dist_counts <- list(
-  migraciones = agg_dist(mig, "provincia", "distrito", "departamento"),
-  salud_atenciones = agg_dist(salud_at, "provincia", "distrito"),
-  educ_basica = agg_dist(educ_bas, "provincia", "distrito", "departamento")
+  migraciones = agg_dist_prov_cusco(mig, "provincia", "distrito", "departamento"),
+  salud_atenciones = agg_dist_prov_cusco(salud_at, "provincia", "distrito"),
+  salud_afiliados = agg_dist_prov_cusco(salud_af, "provincia", "distrito"),
+  educ_basica = agg_dist_prov_cusco(educ_bas, "provincia", "distrito", "departamento"),
+  educ_superior = agg_dist_prov_cusco(educ_sup, "provincia", "distrito", "departamento"),
+  educ_institutos = agg_dist_prov_cusco(educ_ins, "provincia", "distrito")
 )
 
-diag_geo <- purrr::imap_dfr(prov_counts, function(cnt, nm) {
-  j <- prov_cusco %>%
+diag_geo <- purrr::imap_dfr(dist_counts, function(cnt, nm) {
+  j <- dist_prov_cusco %>%
     st_drop_geometry() %>%
-    select(prov_norm, PROVINCIA) %>%
-    left_join(cnt, by = "prov_norm")
+    select(dist_norm, DISTRITO) %>%
+    left_join(cnt, by = "dist_norm")
   tibble(
     dataset = nm,
-    provincias_shp_cusco = nrow(prov_cusco),
-    provincias_con_datos = sum(!is.na(j$n) & j$n > 0),
-    provincias_sin_datos = sum(is.na(j$n) | j$n == 0),
+    distritos_shp_provincia_cusco = nrow(dist_prov_cusco),
+    distritos_con_datos = sum(!is.na(j$n) & j$n > 0),
+    distritos_sin_datos = sum(is.na(j$n) | j$n == 0),
     registros_totales_dataset = sum(cnt$n, na.rm = TRUE),
     registros_mapeados = sum(replace_na(j$n, 0)),
     pct_registros_mapeados = 100 * registros_mapeados / pmax(registros_totales_dataset, 1)
@@ -1077,22 +1058,23 @@ diag_geo <- purrr::imap_dfr(prov_counts, function(cnt, nm) {
 
 diag_geo %>%
   gt() %>%
-  tab_header(title = "Diagnóstico de georreferenciación a nivel provincial (Cusco)") %>%
-  fmt_number(columns = c(provincias_shp_cusco, provincias_con_datos, provincias_sin_datos, registros_totales_dataset, registros_mapeados), decimals = 0, use_seps = TRUE) %>%
+  tab_header(title = "Diagnóstico de georreferenciación distrital (Provincia del Cusco)") %>%
+  fmt_number(columns = c(distritos_shp_provincia_cusco, distritos_con_datos, distritos_sin_datos, registros_totales_dataset, registros_mapeados), decimals = 0, use_seps = TRUE) %>%
   fmt_number(columns = pct_registros_mapeados, decimals = 2)
 ```
 
-**Comentario de análisis.** El cruce muestra qué tan bien empatan los nombres geográficos entre bases y shapefiles de INEI. En estas fuentes, la georreferenciación provincial en Cusco tiene cobertura alta; MTPE queda fuera por no tener llave territorial directa.
+**Comentario de análisis.** Este cruce valida la unión en el ámbito exacto de la tesis: distritos de la provincia del Cusco. El resultado muestra qué bases tienen cobertura territorial útil para análisis local fino.
 
-## 8.2 Mapas provinciales comparados por dataset
+## 8.2 Mapas distritales comparados (Provincia del Cusco)
 
 ```{r}
-prov_maps_sf <- purrr::imap(prov_counts, function(cnt, nm) {
-  prov_cusco %>%
-    left_join(cnt, by = "prov_norm") %>%
+dist_maps_sf <- purrr::imap(dist_counts, function(cnt, nm) {
+  dist_prov_cusco %>%
+    left_join(cnt, by = "dist_norm") %>%
     mutate(
       n = replace_na(n, 0),
-      dataset = nm
+      dataset = nm,
+      n_log = log1p(n)
     )
 }) %>%
   dplyr::bind_rows() %>%
@@ -1105,69 +1087,13 @@ prov_maps_sf <- purrr::imap(prov_counts, function(cnt, nm) {
     educ_institutos = "Educación institutos"
   ))
 
-p_map_prov <- ggplot(prov_maps_sf) +
-  geom_sf(aes(fill = n), color = "grey60", linewidth = 0.2) +
-  facet_wrap(~dataset, ncol = 3) +
-  scale_fill_viridis_c(option = "C", labels = scales::comma) +
-  labs(
-    title = "Distribución provincial de registros en Cusco por dataset",
-    subtitle = "Fuente cartográfica: INEI 2023 (SHP prov.)",
-    fill = "Registros"
-  ) +
-  theme(
-    axis.text = element_blank(),
-    axis.title = element_blank(),
-    panel.grid = element_blank()
-  )
-p_map_prov
-```
-
-**Comentario de análisis.** Este panel permite comparar concentración territorial entre sectores. Si varias bases señalan las mismas provincias de alta carga, se refuerza la evidencia de focos territoriales prioritarios para intervención.
-
-```{r}
-top_prov_multi <- prov_maps_sf %>%
-  st_drop_geometry() %>%
-  group_by(dataset, PROVINCIA) %>%
-  summarise(n = sum(n), .groups = "drop") %>%
-  arrange(dataset, desc(n)) %>%
-  group_by(dataset) %>%
-  slice_head(n = 5) %>%
-  ungroup()
-
-top_prov_multi %>%
-  gt() %>%
-  tab_header(title = "Top 5 provincias por dataset (Cusco)") %>%
-  fmt_number(columns = n, decimals = 0, use_seps = TRUE)
-```
-
-**Comentario de análisis.** Esta tabla resume la jerarquía territorial por fuente y facilita redactar hallazgos comparativos (coincidencias y divergencias entre salud, migración y educación).
-
-## 8.3 Mapas distritales (detalle local)
-
-```{r}
-dist_maps_sf <- purrr::imap(dist_counts, function(cnt, nm) {
-  dist_cusco %>%
-    left_join(cnt, by = c("prov_norm", "dist_norm")) %>%
-    mutate(
-      n = replace_na(n, 0),
-      dataset = nm,
-      n_log = log1p(n)
-    )
-}) %>%
-  dplyr::bind_rows() %>%
-  mutate(dataset = recode(dataset,
-    migraciones = "Migraciones",
-    salud_atenciones = "Salud atenciones",
-    educ_basica = "Educación básica"
-  ))
-
 p_map_dist <- ggplot(dist_maps_sf) +
-  geom_sf(aes(fill = n_log), color = NA) +
+  geom_sf(aes(fill = n_log), color = "grey80", linewidth = 0.15) +
   facet_wrap(~dataset, ncol = 3) +
   scale_fill_viridis_c(option = "B", labels = function(x) round(exp(x) - 1)) +
   labs(
-    title = "Distribución distrital de registros (escala log(1+n))",
-    subtitle = "Cusco - datasets con mayor detalle territorial",
+    title = "Distribución distrital de registros en la provincia del Cusco",
+    subtitle = "Escala log(1+n) para mejorar contraste entre distritos",
     fill = "Registros"
   ) +
   theme(
@@ -1178,12 +1104,12 @@ p_map_dist <- ggplot(dist_maps_sf) +
 p_map_dist
 ```
 
-**Comentario de análisis.** A nivel distrital aparece microconcentración que no se ve en provincia. Este nivel es el más útil para priorización operativa de servicios o intervención local.
+**Comentario de análisis.** El mapa comparado muestra, para cada fuente, en qué distritos de la provincia del Cusco se concentra la mayor carga de registros y dónde la presencia es baja o nula.
 
 ```{r}
 top_dist_multi <- dist_maps_sf %>%
   st_drop_geometry() %>%
-  group_by(dataset, PROVINCIA, DISTRITO) %>%
+  group_by(dataset, DISTRITO) %>%
   summarise(n = sum(n), .groups = "drop") %>%
   arrange(dataset, desc(n)) %>%
   group_by(dataset) %>%
@@ -1192,13 +1118,13 @@ top_dist_multi <- dist_maps_sf %>%
 
 top_dist_multi %>%
   gt() %>%
-  tab_header(title = "Top 10 distritos por dataset georreferenciado") %>%
+  tab_header(title = "Top 10 distritos (Provincia del Cusco) por dataset") %>%
   fmt_number(columns = n, decimals = 0, use_seps = TRUE)
 ```
 
-**Comentario de análisis.** Esta tabla entrega evidencia concreta de hotspots distritales por sector. Es una salida directamente usable en recomendaciones territoriales de tesis.
+**Comentario de análisis.** Esta tabla consolida hotspots distritales para priorización territorial en la tesis, permitiendo comparar consistencia entre salud, migraciones y educación en el mismo espacio local.
 
-# Notas metodológicas finales
+# Notas metodológicas finales {#notas}
 
 - Los p-valores deben interpretarse junto con tamaño de efecto (ej. **Cramér's V**) y contexto sustantivo.
 - En muestras grandes, es habitual encontrar significancia estadística para efectos pequeños.
