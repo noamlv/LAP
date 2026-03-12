@@ -568,18 +568,46 @@ plotly::ggplotly(p_salud_yr)
 **Comentario de análisis.** La visualización interactiva facilita extraer valores exactos por año para redacción de resultados y diapositivas.
 
 ```{r}
-p_salud_diag <- salud_at %>%
+diag_top <- salud_at %>%
   count(cod_diagnostico, descripcion_diagnostica, sort = TRUE) %>%
-  slice_head(n = 15) %>%
-  ggplot(aes(x = forcats::fct_reorder(descripcion_diagnostica, n), y = n)) +
-  geom_col(fill = "#FD8D3C") +
-  coord_flip() +
-  scale_y_continuous(labels = scales::comma) +
-  labs(title = "Top 15 diagnósticos", x = "Diagnóstico", y = "n")
+  mutate(
+    descripcion_limpia = stringr::str_squish(descripcion_diagnostica),
+    etiqueta_plot = cod_diagnostico
+  ) %>%
+  slice_head(n = 12) %>%
+  arrange(n) %>%
+  mutate(etiqueta_plot = factor(etiqueta_plot, levels = etiqueta_plot))
+
+p_salud_diag <- ggplot(diag_top, aes(x = n, y = etiqueta_plot)) +
+  geom_col(fill = "#FD8D3C", width = 0.7) +
+  geom_text(aes(label = scales::comma(n)), hjust = -0.1, size = 3.6) +
+  scale_x_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.16))) +
+  labs(
+    title = "Top 12 diagnósticos (código CIE)",
+    subtitle = "Las descripciones completas se muestran en la tabla de referencia",
+    x = "Número de atenciones",
+    y = "Código diagnóstico"
+  ) +
+  theme(axis.text.y = element_text(size = 10))
 p_salud_diag
 ```
 
-**Comentario de análisis.** Esta figura identifica diagnósticos más recurrentes; sirve para priorizar interpretación clínica-epidemiológica en el capítulo de resultados.
+**Comentario de análisis.** El diagnóstico con mayor frecuencia es **`r diag_top %>% arrange(desc(n)) %>% slice(1) %>% pull(cod_diagnostico)`** con `r scales::comma(diag_top %>% arrange(desc(n)) %>% slice(1) %>% pull(n))` atenciones. En conjunto, los 3 diagnósticos más frecuentes suman `r scales::comma(diag_top %>% arrange(desc(n)) %>% slice_head(n=3) %>% summarise(s=sum(n)) %>% pull(s))` registros, mostrando una concentración clínico-epidemiológica clara.
+
+```{r}
+diag_top %>%
+  arrange(desc(n)) %>%
+  transmute(
+    cod_diagnostico,
+    descripcion_diagnostica = descripcion_limpia,
+    n
+  ) %>%
+  gt() %>%
+  tab_header(title = "Referencia de diagnósticos (nombre completo)") %>%
+  fmt_number(columns = n, decimals = 0, use_seps = TRUE)
+```
+
+**Comentario de análisis.** Esta tabla preserva el texto completo para trazabilidad clínica, mientras el gráfico mantiene legibilidad para comunicación visual.
 
 ## Bivariado (significancia) {#salud-atenciones-bivariado}
 
