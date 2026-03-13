@@ -1,0 +1,172 @@
+variable_estandar,tipo_dato,descripcion,datasets_presentes,columnas_origen
+acceso_salud_por_asistencia,string,Indica si pudo acceder a salud gracias a asistencia humanitaria.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:acceso_salud_por_asistencia
+actividad_economica,string,Sector de actividad económica.,mtpe_empleo,mtpe_empleo:Actividad económica
+anexo,Int64,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:ANEXO
+anio,Int64,Año de referencia del registro.,educ_superior_programas; migraciones_residencia; mtpe_empleo,
+anio_afiliacion,Int64,Variable estandarizada para análisis descriptivo.,salud_afiliados,
+anio_atencion,Int64,Variable estandarizada para análisis descriptivo.,salud_atenciones,salud_atenciones:AñoAte
+anio_ingreso,Int64,Variable estandarizada para análisis descriptivo.,educ_institutos,
+anio_llegada_cusco,Float64,Año de llegada al Cusco.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:anio_llegada_cusco
+anio_llegada_peru,Float64,Año de llegada al Perú.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:anio_llegada_peru
+anio_nacimiento,Float64,Variable de encuesta: anio nacimiento.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:anio_nacimiento
+anio_ultimo_ingreso_peru,Float64,Variable de encuesta: anio ultimo ingreso peru.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:anio_ultimo_ingreso_peru
+anios_apoyo_ong,string,Variable de encuesta: anios apoyo ong.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:anios_apoyo_ong
+apoyo_ayudo_continuidad_escolar,string,Variable de encuesta: apoyo ayudo continuidad escolar.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:apoyo_ayudo_continuidad_escolar
+apoyo_educativo_hogar_2024,string,Indica si algún miembro del hogar recibió apoyo educativo en 2024.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:apoyo_educativo_hogar_2024
+apoyo_medios_vida_2024,string,Indica si recibió apoyo de medios de vida en 2024.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:apoyo_medios_vida_2024
+apoyo_ong_bin,Float64,Indicador binario de recepción de apoyo ONG (1=Sí).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:apoyo_ong_bin
+asiste_educ_basica_superior,string,Variable de encuesta: asiste educ basica superior.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:asiste_educ_basica_superior
+canal_conseguir_trabajo,string,Variable de encuesta: canal conseguir trabajo.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:canal_conseguir_trabajo
+carrera,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:CARRERA
+carrera_formacion_superior,string,Variable de encuesta: carrera formacion superior.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:carrera_formacion_superior
+categoria_ocupacional,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Categoria ocupacional
+ciclo,Int64,Variable estandarizada para análisis descriptivo.,educ_institutos; educ_superior_programas,educ_institutos:CICLO
+ciudad_origen,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Ciudad de Origen
+ciudad_ultimo_ingreso_peru,string,Variable de encuesta: ciudad ultimo ingreso peru.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:ciudad_ultimo_ingreso_peru
+cod_diagnostico,string,Código CIE u otro código diagnóstico reportado.,salud_atenciones,salud_atenciones:Cod_Diagnostico
+cod_renaes,int64,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:cod_renaes
+codigo_modular,Int64,Variable estandarizada para análisis descriptivo.,educ_basica; educ_institutos; educ_superior_programas,educ_basica:CODIGO MODULAR; educ_institutos:CÓDIGO_MODULAR; educ_superior_programas:CÓDIGO MODULAR
+conteo,Int64,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:cant
+departamento,string,Variable estandarizada para análisis descriptivo.,educ_basica; educ_superior_programas; migraciones_residencia,educ_basica:DEPARTAMENTO; educ_superior_programas:DEPARTAMENTO; migraciones_residencia:Departamento
+descripcion_diagnostica,string,Descripción textual del diagnóstico.,salud_atenciones,salud_atenciones:Descripcion_Diagnostica
+descripcion_enfermedad,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Descripción de Enfermedad
+dias_trabajo_semana,Float64,Número de días trabajados por semana.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:dias_trabajo_semana
+direccion,string,Variable estandarizada para análisis descriptivo.,salud_afiliados; salud_atenciones,salud_afiliados:direccion; salud_atenciones:Direccion
+discapacidad,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Discapacidad
+distrito,string,Distrito de residencia/registro.,educ_basica; educ_institutos; educ_superior_programas; migraciones_residencia; salud_afiliados; salud_atenciones,educ_basica:DISTRITO; educ_institutos:DISTRITO; educ_superior_programas:DISTRITO; migraciones_residencia:Distrito; salud_afiliados:Pre_distrito; salud_atenciones:Distrito
+distrito_residencia,string,Distrito de residencia actual en Cusco.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:distrito_residencia
+documentos_identidad,string,Variable de encuesta: documentos identidad.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:documentos_identidad
+dre,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:DRE
+edad,int64,Edad en años.,educ_superior_programas; migraciones_residencia; salud_afiliados; salud_atenciones,educ_superior_programas:EDAD; migraciones_residencia:Edad; salud_afiliados:edad; salud_atenciones:Edad
+edad,Float64,Edad de la persona encuestada en años.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:edad
+edad_aprox_2024,Float64,Variable estandarizada para análisis descriptivo.,educ_institutos,
+edad_estudiante,int64,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:EDAD ESTUDIANTE
+edad_madre,float64,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:EDAD MADRE
+edad_padre,float64,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:EDAD PADRE
+embarazo,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Embarazo
+empleo_informal_bin,Float64,Indicador binario de empleo informal actual (1=Sí).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:empleo_informal_bin
+enfermedad_cronica,string,Variable de encuesta: enfermedad cronica.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:enfermedad_cronica
+enfermedad_cronica_detalle,string,Variable de encuesta: enfermedad cronica detalle.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:enfermedad_cronica_detalle
+envia_remesas,string,Indica si envía remesas al exterior.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:envia_remesas
+establecimiento,string,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:est_nombre
+estado_civil,string,Estado civil reportado.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:estado_civil
+estado_civil,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Estado Civil
+estado_migratorio,string,Situación migratoria reportada.,migraciones_residencia,migraciones_residencia:Estado Migratorio
+estado_procedencia,string,Variable de encuesta: estado procedencia.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:estado_procedencia
+fecha_afiliacion,datetime64[us],Variable estandarizada para análisis descriptivo.,salud_afiliados; salud_atenciones,salud_afiliados:fecafil; salud_atenciones:Fecha_Afiliacion
+fecha_ingreso,object,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Fecha de ingreso al país
+fecha_llegada_cusco,string,Variable de encuesta: fecha llegada cusco.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:fecha_llegada_cusco
+fecha_llegada_peru,string,Variable de encuesta: fecha llegada peru.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:fecha_llegada_peru
+fecha_nacimiento,datetime64[us],Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:F_FechaNacimiento
+fecha_nacimiento,string,Variable de encuesta: fecha nacimiento.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:fecha_nacimiento
+fecha_ultimo_ingreso_peru,string,Variable de encuesta: fecha ultimo ingreso peru.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:fecha_ultimo_ingreso_peru
+frecuencia_asistencia,string,Frecuencia reportada de la asistencia recibida.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:frecuencia_asistencia
+frecuencia_remesas,string,Frecuencia declarada de envío de remesas.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:frecuencia_remesas
+fuente,str,Institución o sistema de origen de los datos.,educ_basica; educ_institutos; educ_superior_programas; migraciones_residencia; mtpe_empleo; salud_afiliados; salud_atenciones,
+fuente,string,Variable de encuesta: fuente.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:fuente
+gestion,string,Variable estandarizada para análisis descriptivo.,educ_basica; educ_institutos; educ_superior_programas,educ_basica:GESTION; educ_institutos:GESTIÓN; educ_superior_programas:GESTIÓN
+grado,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:DSC_GRADO
+grupo_etario,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia; salud_afiliados; salud_atenciones,migraciones_residencia:Grupo etario; salud_afiliados:G_Etareo; salud_atenciones:G_Etareo
+horas_trabajo_aprox,Float64,Horas aproximadas trabajadas por día en ocupación principal.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:horas_trabajo_aprox
+horas_trabajo_cat,string,Variable de encuesta: horas trabajo cat.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:horas_trabajo_cat
+id_afiliado_hash,str,Variable estandarizada para análisis descriptivo.,salud_afiliados; salud_atenciones,salud_afiliados:NroAfil (hash); salud_atenciones:NroAfil (hash)
+id_atencion_hash,str,Variable estandarizada para análisis descriptivo.,salud_atenciones,salud_atenciones:NroAtencion (hash)
+id_empresa,Int64,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Id_Empresa
+id_encuesta,Int64,Identificador secuencial de registro de encuesta.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:id_encuesta
+id_tipo_documento,float64,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:ID_TipDocumento
+id_trabajador,Int64,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Id_Trabajador
+ingreso_categoria,string,Tramo categórico de ingreso mensual laboral.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:ingreso_categoria
+ingreso_mensual_aprox_soles,Float64,Ingreso laboral mensual aproximado en soles (estimado por tramo).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:ingreso_mensual_aprox_soles
+inscrito_sup_anio_pasado,string,Variable de encuesta: inscrito sup anio pasado.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:inscrito_sup_anio_pasado
+inscrito_sup_este_anio,string,Variable de encuesta: inscrito sup este anio.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:inscrito_sup_este_anio
+lengua,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:LENGUA
+marca_temporal,string,Fecha y hora de registro de la respuesta.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:marca_temporal
+matricula,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:MATRÍCULA
+medio_transporte,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Medio de transporte ³
+mejora_ingresos_por_apoyo,string,Percepción de mejora de ingresos o estabilidad por el apoyo.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:mejora_ingresos_por_apoyo
+mejora_salud_tras_apoyo,string,Variable de encuesta: mejora salud tras apoyo.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:mejora_salud_tras_apoyo
+mes,Int64,Mes de referencia del registro.,migraciones_residencia; mtpe_empleo,
+mes_afiliacion,Int64,Variable estandarizada para análisis descriptivo.,salud_afiliados,
+mes_atencion,Int64,Variable estandarizada para análisis descriptivo.,salud_atenciones,salud_atenciones:MesAte
+mes_corte_reporte,string,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:Afi_Mes
+microred,string,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:Pre_Microred
+monto_remesa_ultimo_mes_soles,Float64,Monto aproximado enviado en el último mes (soles).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:monto_remesa_ultimo_mes_soles
+motivo_no_homologacion,string,Variable de encuesta: motivo no homologacion.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:motivo_no_homologacion
+motivo_no_uso_herramientas,string,Variable de encuesta: motivo no uso herramientas.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:motivo_no_uso_herramientas
+motivo_sin_permiso_migratorio,Float64,Variable de encuesta: motivo sin permiso migratorio.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:motivo_sin_permiso_migratorio
+nacionalidad,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:NACIONALIDAD
+nivel,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:NIVEL
+nivel_educativo,string,Nivel educativo reportado.,migraciones_residencia; mtpe_empleo,migraciones_residencia:Nivel Educativo; mtpe_empleo:Nivel educativo alcanzado
+nivel_estudio,string,Último nivel educativo aprobado en Venezuela.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:nivel_estudio
+nombre_ie,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:NOMBRE IE
+nombre_iiee,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:NOMBRE IIEE
+nombre_institucion,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:NOMBRE DE LA INSTITUCIÓN
+nro_diag,Int64,Variable estandarizada para análisis descriptivo.,salud_atenciones,salud_atenciones:NroDiag
+num_reg_afis,object,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:afi_numregafis
+ocupacion_actual,string,Variable de encuesta: ocupacion actual.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:ocupacion_actual
+ocupacion_madre,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:OCUPACION MADRE
+ocupacion_padre,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:OCUPACION PADRE
+organismos_estado_apoyo,string,Variable de encuesta: organismos estado apoyo.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:organismos_estado_apoyo
+organizaciones_apoyo_ong,string,Variable de encuesta: organizaciones apoyo ong.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:organizaciones_apoyo_ong
+pais,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:PAIS
+pais_procedencia,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:PAIS QUE PROCEDE
+pais_remesas,string,Variable de encuesta: pais remesas.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:pais_remesas
+percibe_discriminacion_laboral,string,Variable de encuesta: percibe discriminacion laboral.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:percibe_discriminacion_laboral
+periodo,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Período
+periodo_ingreso,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:PERIODO ACADÉMICO DE INGRESO
+periodo_lectivo,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:PERIODO LECTIVO
+permanencia_cusco_bin,Float64,Indicador binario de plan de permanencia en la provincia del Cusco (1=Sí).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:permanencia_cusco_bin
+permiso_migratorio_actual,string,Tipo de permiso migratorio actual para permanencia en Perú.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:permiso_migratorio_actual
+profesion,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Profesión
+programa_estudios,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:PROGRAMA  DE ESTUDIOS
+provincia,string,Provincia de residencia/registro en Cusco.,educ_basica; educ_institutos; educ_superior_programas; migraciones_residencia; salud_afiliados; salud_atenciones,educ_basica:PROVINCIA; educ_institutos:PROVINCIA; educ_superior_programas:PROVINCIA; migraciones_residencia:Provincia; salud_afiliados:pre_provincia; salud_atenciones:Provincia
+puesto_control,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Puesto de Control
+quintil,int64,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:pre_Quintil
+rango_salarial,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Rangos Salariales
+rango_tiempo_permanencia,string,Variable estandarizada para análisis descriptivo.,migraciones_residencia,migraciones_residencia:Rangos Tiempos de Permanencia
+recibio_apoyo_ong,string,Indica si recibió apoyo de cooperación internacional (ONG).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:recibio_apoyo_ong
+red_abrev,string,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:red_abrev
+regimen_especial_trabajo,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Régimen Especial de Trabajo
+regimen_laboral,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Régimen laboral
+regimen_pensionario,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Régimen pensionario
+regimen_salud,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Régimen de salud
+region,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:REGIÓN
+remesas_bin,Float64,Indicador binario de envío de remesas (1=Sí).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:remesas_bin
+remuneracion_soles,float64,Remuneración mensual declarada en soles.,mtpe_empleo,"mtpe_empleo:Remuneración 
+(Soles)"
+residencia_proximos_anios,string,Lugar donde planea residir en los próximos años.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:residencia_proximos_anios
+satisfaccion_alta_bin,Float64,Indicador binario de satisfacción laboral alta (1=Satisfecho/Muy satisfecho).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:satisfaccion_alta_bin
+satisfaccion_laboral,string,Nivel de satisfacción con trabajo actual.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:satisfaccion_laboral
+seccion,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:SECCIÓN
+seguro_salud,string,Tipo de afiliación actual al sistema de salud.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:seguro_salud
+semestre,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:SEMESTRE
+servicio_codigo,Int64,Variable estandarizada para análisis descriptivo.,salud_atenciones,salud_atenciones:Servicio
+servicio_descripcion,string,Descripción del servicio de salud brindado.,salud_atenciones,salud_atenciones:SER_DESCRIPCION
+sexo,str,Sexo normalizado (F/M).,educ_basica; educ_institutos; educ_superior_programas; migraciones_residencia; salud_afiliados; salud_atenciones,educ_basica:SEXO; educ_institutos:SEXO; educ_superior_programas:SEXO; migraciones_residencia:Sexo; salud_afiliados:Sexo; salud_atenciones:Sexo
+sexo,string,Sexo declarado por la persona encuestada.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:sexo
+sexo_madre,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:SEXO MADRE
+sexo_padre,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:SEXO PADRE
+sindicalizado,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Sindicalizado
+situacion_discapacidad,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Situación de Discapacidad
+situacion_economica_vs_llegada,string,Variable de encuesta: situacion economica vs llegada.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:situacion_economica_vs_llegada
+situacion_laboral,string,Situación laboral actual de la persona encuestada.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:situacion_laboral
+solicito_refugio,string,Situación de solicitud o reconocimiento de refugio.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:solicito_refugio
+subfuente,str,Subconjunto o módulo específico de la fuente.,educ_basica; educ_institutos; educ_superior_programas; migraciones_residencia; mtpe_empleo; salud_afiliados; salud_atenciones,
+subfuente,string,Variable de encuesta: subfuente.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:subfuente
+tamano_empresa,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Tamaño de empresa
+tiempo_en_empleo_actual,string,Variable de encuesta: tiempo en empleo actual.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:tiempo_en_empleo_actual
+tiene_hijos,string,Variable de encuesta: tiene hijos.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:tiene_hijos
+tipo_asistencia_ong,string,Tipos de asistencia humanitaria recibida.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:tipo_asistencia_ong
+tipo_contrato,string,Variable estandarizada para análisis descriptivo.,mtpe_empleo,mtpe_empleo:Tipo de contrato
+tipo_empleo,string,Tipo de empleo actual (formal/informal/independiente).,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:tipo_empleo
+tipo_estudiante,string,Variable estandarizada para análisis descriptivo.,educ_superior_programas,educ_superior_programas:TIPO DE ESTUDIANTE
+tipo_formato,int64,Variable estandarizada para análisis descriptivo.,salud_afiliados,salud_afiliados:afi_tipoformato
+tipo_institucion,string,Variable estandarizada para análisis descriptivo.,educ_institutos,educ_institutos:TIPO
+titulo_homologado_peru,string,Variable de encuesta: titulo homologado peru.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:titulo_homologado_peru
+trabajo_previo_venezuela,string,Variable de encuesta: trabajo previo venezuela.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:trabajo_previo_venezuela
+trabajo_previo_venezuela_detalle_raw,string,Variable de encuesta: trabajo previo venezuela detalle raw.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:trabajo_previo_venezuela_detalle_raw
+trabajo_relacion_formacion,string,Variable de encuesta: trabajo relacion formacion.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:trabajo_relacion_formacion
+tratamiento_cronico,string,Variable de encuesta: tratamiento cronico.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:tratamiento_cronico
+turno,string,Variable estandarizada para análisis descriptivo.,educ_institutos; educ_superior_programas,educ_institutos:TURNO; educ_superior_programas:TURNO
+ugel,string,Variable estandarizada para análisis descriptivo.,educ_basica,educ_basica:UGEL
+usa_herramientas_apoyo,string,Variable de encuesta: usa herramientas apoyo.,encuesta_comunidad_venezolana,encuesta_comunidad_venezolana:usa_herramientas_apoyo
