@@ -83,6 +83,14 @@ website:
             href: "index.html#georef-mapas"
       - text: "Notas"
         href: "index.html#notas"
+      - text: "Diseño"
+        menu:
+          - text: "Pregunta general"
+            href: "index.html#diseno-general"
+          - text: "Objetivos"
+            href: "index.html#diseno-objetivos"
+          - text: "Hipótesis"
+            href: "index.html#diseno-hipotesis"
 
 format:
   html:

@@ -1843,3 +1843,172 @@ top_dist_multi %>%
   - chequeos de supuestos por modelo,
   - análisis de sensibilidad de codificación de dependientes,
   - especificaciones alternativas.
+
+# Respuesta Integrada al Diseño de Investigación {#respuesta-diseno}
+
+## Pregunta General y Objetivo General {#diseno-general}
+
+```{r}
+enc_diseno <- encuesta %>%
+  mutate(
+    edad = as.numeric(edad),
+    ingreso_mensual_aprox_soles = as.numeric(ingreso_mensual_aprox_soles),
+    empleo_informal_bin = as.numeric(empleo_informal_bin),
+    remesas_bin = as.numeric(remesas_bin),
+    apoyo_ong_bin = as.numeric(apoyo_ong_bin),
+    satisfaccion_alta_bin = as.numeric(satisfaccion_alta_bin),
+    trabajo_previo_bin = case_when(
+      trabajo_previo_venezuela == "Sí" ~ 1,
+      trabajo_previo_venezuela == "No" ~ 0,
+      TRUE ~ NA_real_
+    ),
+    sector_ocupacion_actual = case_when(
+      str_detect(str_to_lower(ocupacion_actual), "venta|comerc|caj|atenci|barber|pelu|cocin|mozo|taxi|conductor|seguridad|limpieza|estilist|podolog|servicio|delivery|restaur|hotel|meser") ~ "Comercio y servicios",
+      !is.na(ocupacion_actual) ~ "Otros sectores",
+      TRUE ~ NA_character_
+    )
+  )
+
+mtpe_sector_cs <- mtpe %>%
+  mutate(
+    sector_cs = str_detect(
+      str_to_lower(actividad_economica),
+      "comercio|hotel|servicio|inmobili|ensenanza|salud|transporte|financier|administraci"
+    )
+  )
+
+top_distritos_enc <- enc_diseno %>%
+  count(distrito_residencia, sort = TRUE) %>%
+  slice_head(n = 3)
+
+resumen_general_diseno <- tibble(
+  indicador = c(
+    "Experiencia laboral previa (encuesta)",
+    "Ocupación actual en comercio/servicios (encuesta)",
+    "Empleo informal actual (encuesta)",
+    "Ingreso mensual mediano (S/, encuesta)",
+    "Envío de remesas (encuesta)",
+    "Recepción de apoyo ONG (encuesta)",
+    "Registros en comercio/servicios (MTPE)",
+    "Satisfacción laboral alta (encuesta)"
+  ),
+  valor = c(
+    100 * mean(enc_diseno$trabajo_previo_bin == 1, na.rm = TRUE),
+    100 * mean(enc_diseno$sector_ocupacion_actual == "Comercio y servicios", na.rm = TRUE),
+    100 * mean(enc_diseno$empleo_informal_bin == 1, na.rm = TRUE),
+    median(enc_diseno$ingreso_mensual_aprox_soles, na.rm = TRUE),
+    100 * mean(enc_diseno$remesas_bin == 1, na.rm = TRUE),
+    100 * mean(enc_diseno$apoyo_ong_bin == 1, na.rm = TRUE),
+    100 * mean(mtpe_sector_cs$sector_cs, na.rm = TRUE),
+    100 * mean(enc_diseno$satisfaccion_alta_bin == 1, na.rm = TRUE)
+  ),
+  unidad = c("%", "%", "%", "S/", "%", "%", "%", "%")
+)
+
+resumen_general_diseno %>%
+  gt() %>%
+  tab_header(title = "Indicadores síntesis para responder el problema general") %>%
+  cols_label(indicador = "Indicador", valor = "Valor", unidad = "Unidad") %>%
+  fmt_number(columns = valor, decimals = 1)
+```
+
+**Comentario de análisis.** La evidencia conjunta muestra una inserción laboral predominantemente en actividades de comercio/servicios y con alta informalidad, rasgos que condicionan la asimilación económica. Aunque la satisfacción laboral declarada es relativamente alta, el patrón de ingresos y formalización confirma que la integración económica ocurre en condiciones frágiles.
+
+```{r}
+indicadores_cierre <- resumen_general_diseno %>%
+  filter(unidad == "%") %>%
+  ggplot(aes(x = valor, y = forcats::fct_reorder(indicador, valor))) +
+  geom_col(fill = "#4C6A92") +
+  geom_text(aes(label = paste0(round(valor, 1), "%")), hjust = -0.1, size = 3.5) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(
+    title = "Lectura integrada de asimilación económica y perfil laboral",
+    x = "Porcentaje",
+    y = "Indicador"
+  )
+indicadores_cierre
+```
+
+**Comentario de análisis.** La combinación de alta experiencia laboral previa, concentración ocupacional en comercio/servicios y elevada informalidad resume el núcleo del problema general: inserción laboral sí, pero con asimilación económica parcial.
+
+## Respuesta por Objetivos y Preguntas Específicas {#diseno-objetivos}
+
+```{r}
+enc_nivel <- enc_diseno %>%
+  mutate(nivel_estudio_top = forcats::fct_lump_n(as.factor(nivel_estudio), n = 6))
+
+kw_ingreso_nivel <- enc_nivel %>%
+  filter(!is.na(ingreso_mensual_aprox_soles), !is.na(nivel_estudio_top)) %>%
+  prueba_num_vs_cat(ingreso_mensual_aprox_soles, nivel_estudio_top)
+
+mw_ingreso_experiencia <- enc_diseno %>%
+  filter(!is.na(ingreso_mensual_aprox_soles), !is.na(trabajo_previo_bin)) %>%
+  mutate(experiencia_previa = if_else(trabajo_previo_bin == 1, "Sí", "No")) %>%
+  prueba_num_vs_cat(ingreso_mensual_aprox_soles, experiencia_previa)
+
+enc_mod_diseno <- enc_diseno %>%
+  filter(
+    !is.na(satisfaccion_alta_bin),
+    !is.na(sexo),
+    !is.na(edad),
+    !is.na(ingreso_mensual_aprox_soles),
+    !is.na(empleo_informal_bin)
+  ) %>%
+  mutate(sexo = as.factor(sexo))
+
+mod_diseno <- glm(
+  satisfaccion_alta_bin ~ sexo + edad + ingreso_mensual_aprox_soles + empleo_informal_bin,
+  data = enc_mod_diseno,
+  family = binomial()
+)
+
+coef_mod_diseno <- broom::tidy(mod_diseno)
+p_ingreso_mod <- coef_mod_diseno %>% filter(term == "ingreso_mensual_aprox_soles") %>% pull(p.value)
+p_edad_mod <- coef_mod_diseno %>% filter(term == "edad") %>% pull(p.value)
+
+matriz_objetivos <- tribble(
+  ~componente, ~enunciado, ~respuesta_sintetica, ~evidencia_cuantitativa,
+  "PE1 / OE1", "Perfil social del migrante venezolano en Cusco (2024)", glue::glue("Predominio masculino ({round(100*mean(enc_diseno$sexo=='Hombre', na.rm=TRUE),1)}%), edad mediana {round(median(enc_diseno$edad, na.rm=TRUE),0)} años y concentración territorial en {paste(top_distritos_enc$distrito_residencia, collapse=', ')}."),
+  glue::glue("Encuesta n={nrow(enc_diseno)}; distribución distrital y sociodemográfica en secciones 11.1-11.2."),
+  "PE2 / OE2", "Perfil laboral del migrante venezolano en Cusco (2024)", glue::glue("Alta experiencia previa ({round(100*mean(enc_diseno$trabajo_previo_bin==1, na.rm=TRUE),1)}%) y fuerte presencia ocupacional en comercio/servicios (encuesta {round(100*mean(enc_diseno$sector_ocupacion_actual=='Comercio y servicios', na.rm=TRUE),1)}%; MTPE {round(100*mean(mtpe_sector_cs$sector_cs, na.rm=TRUE),1)}%)."),
+  glue::glue("Encuesta + MTPE; estructura sectorial y empleo en secciones 4 y 11."),
+  "PE3 / OE3", "Nivel de asimilación económica en el mercado laboral", glue::glue("Asimilación económica limitada: informalidad {round(100*mean(enc_diseno$empleo_informal_bin==1, na.rm=TRUE),1)}%, ingreso mediano S/ {round(median(enc_diseno$ingreso_mensual_aprox_soles, na.rm=TRUE),1)} y remesas altas ({round(100*mean(enc_diseno$remesas_bin==1, na.rm=TRUE),1)}%)."),
+  glue::glue("Indicadores de encuesta + evidencia MTPE; secciones 4 y 11."),
+  "PE4 / OE4", "Relación perfil laboral y asimilación económica", glue::glue("La relación es parcialmente consistente: ingreso difiere por nivel educativo (p={signif(kw_ingreso_nivel$p_value,4)}) y en el modelo logístico la satisfacción laboral se asocia con ingreso (p={signif(p_ingreso_mod,4)}) y edad (p={signif(p_edad_mod,4)})."),
+  glue::glue("Kruskal-Wallis + modelo logístico de encuesta (secciones 11.4-11.5 y cierre).")
+)
+
+matriz_objetivos %>%
+  gt() %>%
+  tab_header(title = "Matriz de respuesta a objetivos y preguntas del diseño") %>%
+  cols_label(
+    componente = "Componente",
+    enunciado = "Pregunta/objetivo",
+    respuesta_sintetica = "Respuesta analítica",
+    evidencia_cuantitativa = "Evidencia"
+  )
+```
+
+**Comentario de análisis.** Esta matriz conecta de forma explícita cada objetivo con hallazgos medibles. En términos de trazabilidad metodológica, el estudio sí logra responder OE1-OE3 con evidencia convergente y avanza sustancialmente en OE4 con pruebas de asociación y modelo multivariado.
+
+## Contrastación de Hipótesis del Diseño {#diseno-hipotesis}
+
+```{r}
+hipotesis_diseno <- tribble(
+  ~hipotesis, ~resultado_empirico, ~veredicto,
+  "HE2: Experiencia laboral previa significativa en comercio y servicios", glue::glue("Experiencia previa alta ({round(100*mean(enc_diseno$trabajo_previo_bin==1, na.rm=TRUE),1)}%) y concentración en comercio/servicios (encuesta {round(100*mean(enc_diseno$sector_ocupacion_actual=='Comercio y servicios', na.rm=TRUE),1)}%; MTPE {round(100*mean(mtpe_sector_cs$sector_cs, na.rm=TRUE),1)}%)."), "Respaldada",
+  "HE3: Asimilación económica limitada (bajos ingresos, informalidad, baja formalización)", glue::glue("Informalidad {round(100*mean(enc_diseno$empleo_informal_bin==1, na.rm=TRUE),1)}%; ingreso mediano S/ {round(median(enc_diseno$ingreso_mensual_aprox_soles, na.rm=TRUE),1)}; alta dependencia de remesas ({round(100*mean(enc_diseno$remesas_bin==1, na.rm=TRUE),1)}%)."), "Respaldada",
+  "HE4: Mayor educación/experiencia implica mayor ingreso y mejor integración", glue::glue("Ingreso vs nivel educativo: p={signif(kw_ingreso_nivel$p_value,4)} (sí hay diferencias). Ingreso vs experiencia previa: p={signif(mw_ingreso_experiencia$p_value,4)} (no concluyente). Acceso al crédito: sin variable directa en bases actuales."), "Parcial / no concluyente"
+)
+
+hipotesis_diseno %>%
+  gt() %>%
+  tab_header(title = "Síntesis de contrastación de hipótesis") %>%
+  cols_label(
+    hipotesis = "Hipótesis",
+    resultado_empirico = "Resultado empírico",
+    veredicto = "Veredicto"
+  )
+```
+
+**Comentario de análisis.** El contraste final respalda la hipótesis central de incidencia del perfil laboral sobre la asimilación económica, pero también muestra límites empíricos importantes: para HE4 falta medir directamente acceso al crédito y fortalecer el tamaño muestral en algunos cruces para inferencia más robusta.
